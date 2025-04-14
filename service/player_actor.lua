@@ -1,7 +1,7 @@
 local queue = require "skynet.queue"
 local skynet = require "skynet"
 local mc = require "skynet.multicast"
-local ROOM_MODEL = (require "room_model")
+local ROOM_MODEL = (require "lualib.models.room_model")
 local cjson = require "cjson"
 
 local ws_info = {

@@ -1,21 +1,23 @@
-root = "./"
-luaservice = root .. "service/?.lua;" .. root .. "test/?.lua;" .. root .. "test/?/init.lua"
-lualoader = root .. "lualib/loader.lua"
-lua_path =  root .. "lualib/?.lua;" .. root .. "lualib/?/init.lua".. ";./game/service/models/?.lua"
-lua_cpath = root .. "luaclib/?.so"
+-- 复制粘贴自 【从零开始学Skynet】实战篇《球球大作战》
+--必须配置
+thread = 8                          --启用多少个工作线程
+cpath = "./skynet/cservice/?.so"    --用C编写的服务模块的位置
+bootstrap = "snlua bootstrap"       --启动的第一个服务
 
-thread = 8
-harbor = 0
+--bootstrap配置项
+start = "main"                      --主程序入口
+harbor = 0                          --不使用主从节点模式
 
+--lua配置项
+lualoader = "./skynet/lualib/loader.lua"
+luaservice = "./service/?.lua;" .."./service/?/init.lua;".. "./skynet/service/?.lua;"
+lua_path = "./etc/?.lua;" .. "./lualib/?.lua;" ..  "./skynet/lualib/?.lua;" .. "./skynet/lualib/?/init.lua"
+lua_cpath = "./luaclib/?.so;" .. "./skynet/luaclib/?.so"
+
+--后台模式
+--daemon = "./skynet.pid"
+--logger = "./userlog"
+
+-- 本项目相关设置
 websocket_port = 8888
-
 usercenter_url = "0.0.0.0:5150"
-
-max_client = 1024
-bootstrap = "snlua bootstrap"
-start = "main" -- 从main.lua启动
-luaservice = luaservice .. ";./game/service/?.lua"
-cpath = root .. "cservice/?.so"
-daemon = nil
-
--- profile = true -- 性能分析

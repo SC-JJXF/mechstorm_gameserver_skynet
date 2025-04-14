@@ -4,7 +4,7 @@ local active_rooms = {} -- 追踪所有活跃房间
 local lobby_mapid_room = {} -- 追踪每个地图的大厅房间 { [mapid] = room_id }
 
 local CMD = {}
-local ROOM_MODEL = (require "room_model")
+local ROOM_MODEL = (require "lualib.models.room_model")
 
 function Log(...)
     skynet.error("[room_mgr]" .. ... .. "。")
