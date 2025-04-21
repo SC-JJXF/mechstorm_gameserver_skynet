@@ -1,6 +1,6 @@
-local room = {}
+local ROOM = {}
 -- 房间类型定义
-room.ROOM_TYPE = {
+ROOM.ROOM_TYPE = {
     ---大厅
     LOBBY = 1,
     ---对战
@@ -9,10 +9,10 @@ room.ROOM_TYPE = {
     PVE = 3
 }
 
-room.MAP_NAME = {
+ROOM.MAP_NAME = {
     hall = {
         Z战队营地 = 1,
     },
 }
 
-return room
+return ROOM

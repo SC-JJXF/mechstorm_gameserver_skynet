@@ -1,0 +1,15 @@
+{
+    "Lua.runtime.unicodeName": true,
+    "Lua.diagnostics.globals": [
+        "SERVICE_NAME"
+    ],
+    "Lua.workspace.library": [
+        "./skynet/lualib/"
+    ],
+    "Lua.runtime.path": [
+        "?.lua",
+        "?/init.lua",
+        "./skynet/lualib/?.lua;",
+        "./skynet/lualib/?/init.lua"
+    ]
+}

@@ -60,10 +60,13 @@ if MODE == "agent" then
     ---@param user_info table 从用户中心获取的用户信息
     ---@return integer player_actor 的 skynet 服务地址
     local function create_player_actor(fd, user_info)
+        local function send_msg_to_client(type, body)
+            skynet.send(skynet.self(), "lua", "send", fd, type, body)
+        end
+
         ---@type integer
-        local actor = skynet.newservice("player_actor")
-        -- 确保 user_info 被正确传递
-        skynet.call(actor, "lua", "init", skynet.self(), fd, user_info)
+        local actor = skynet.newservice("player_actor", send_msg_to_client , user_info)
+        
         connection_to_actor[fd] = actor
         return actor
     end
