@@ -69,5 +69,18 @@ function Traceback(err)
     skynet.error(debug.traceback())
 end
 
+-- debug用
+function PrintTable(tbl, indent)
+    indent = indent or ""
+    for k, v in pairs(tbl) do
+        if type(v) == "table" then
+            Log(indent .. k .. " = {")
+            PrintTable(v, indent .. "  ")
+            Log(indent .. "}")
+        else
+            Log(indent .. k .. " = " .. tostring(v))
+        end
+    end
+end
 
 return M

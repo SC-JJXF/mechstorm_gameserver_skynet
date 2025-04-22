@@ -8,14 +8,17 @@ local cs = (require "skynet.queue")()
 
 local f_send_msg_to_client , user_data  = ...
 local user_info = {
-    uid = user_data.uid,
+    uid = tonumber(user_data.uid),
     nickname= user_data.nickname
 }
-sprite_info = {
+
+local sprite_info = {
     nickname = user_data.nickname,
+    --- 指明是哪款机甲
     theme = "default",
     max_HP = 56000
 }
+
 local current_room = nil
 
 --- 玩家是在大厅休闲 还是在PVP 还是在副本（PVE）
@@ -35,6 +38,13 @@ function rx_from_room(channel, source, msg)
         send_msg_to_client("msg", { message = "当前房间已关闭，您已被送回大厅。", sender = "system" })
     end
 end
+local function tx_to_room(type, body)
+    if not current_room then
+        return
+    end
+    skynet.send(current_room, "lua", "player_" .. type, user_info.uid, body)
+end
+
 local room_tx_to_players = nil
 local function leave_current_room()
     if current_room then
@@ -63,19 +73,12 @@ function change_room_to(new_room)
 end
 
 
-local function tx_to_room(type, body)
-    if not current_room then
-        return
-    end
-    skynet.send(current_room, "lua", "player_" .. type, user_info.uid, body)
-end
 
 
 -- Client message handlers
 function query_lobby_room_id(lobby_map_name)
     return skynet.call(skynet.queryservice("room_mgr"), "lua", "get_lobby_room",
         ROOM_MODEL.MAP_NAME.hall[lobby_map_name])
-    -- Implementation
 end
 
 function update_position(position)

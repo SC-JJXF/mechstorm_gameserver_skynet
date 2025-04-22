@@ -1,6 +1,12 @@
 #### 快速开始
 
+1. 克隆项目到本地
 
+2. 运行 `git submodule update --init --recursive` 以拉取 git 子模块
+
+3. 运行 `./skynet-compile.sh` 以编译本项目依赖的 skynet 框架
+
+4. 运行 `./run.sh` 启动服务
 
 #### 特别鸣谢（开发参考）
 

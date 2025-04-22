@@ -1,0 +1,1 @@
+./skynet ./etc/config.lua
