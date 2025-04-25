@@ -2,14 +2,24 @@
 local skynet = require "skynet"
 local mc = require "skynet.multicast"
 local s = require "service"
+local sprite_model = (require "lualib.models.sprite_model")
 
 local room_type, room_mapid = ...
-
-local room_tx_to_players = nil
 
 local player_count = 0
 
 local players = {}
+
+-- Module to handle specific room behavior (e.g., PvP)
+local behavior_module = nil
+-- Shared state accessible by the behavior module
+local room_state = {
+    players = players,
+    frame_events = {}, -- Moved frame_events here to be part of shared state
+    room_tx_to_players = nil, -- Will be assigned in s.open
+    room_type = room_type,
+    mapid = room_mapid,
+}
 
 local CMD = {}
 
@@ -19,12 +29,17 @@ local function player(player_sprite_info)
         nickname = player_sprite_info.nickname,
         theme = player_sprite_info.theme,
         HP = player_sprite_info.max_HP,
-        position = {
-            x = 0,
-            y = 0,
-            z = 0,
-            --- 是否朝向地图左边，不是左就是右
-            isFacingLeft = false
+        sprite = {
+            position = {
+                x = 0,
+                y = 0,
+                z = 0,
+                --- 是否朝向地图左边，不是左就是右
+                is_facing_left = false
+            },
+            --- 角色受到的击飞晕眩之类的效果
+            debuff = sprite_model.debuff_type.none,
+            debuff_starttime = 0 --前端计算动画用
         }
     }
 end
@@ -45,18 +60,27 @@ function CMD.player_enter(uid, player_sprite_info)
     Log("玩家加入房间，当前玩家数量：" .. player_count)
     return {
         ---@diagnostic disable-next-line: need-check-nil, undefined-field
-        room_tx_channel_id = room_tx_to_players.channel,
+        room_tx_channel_id = room_state.room_tx_to_players.channel,
         room_info = get_room_info()
     }
 end
 
-
-
 -- 玩家离开房间
 function CMD.player_leave(uid)
+    -- Notify behavior module first, if it exists
+    if behavior_module and behavior_module.on_player_leave then
+        behavior_module.on_player_leave(uid, room_state)
+    end
+
     player_count = player_count - 1
     players[uid] = nil
     Log("玩家离开房间，当前玩家数量：" .. player_count)
+
+    -- Check if room should be destroyed when empty (optional, depends on game logic)
+    -- if player_count == 0 then
+    --     Log("房间为空，准备销毁...")
+    --     skynet.send(s.self(), "lua", "close") -- Example: trigger self-destruction
+    -- end
 end
 
 --- 玩家：位置更新
@@ -64,45 +88,76 @@ end
 --- @param position table 玩家位置信息
 function CMD.player_position_update(uid, position)
     -- Log("玩家位置更新：" .. uid .. " -> " .. cjson.encode(position))
-    players[uid] = position
+    players[uid]["sprite"]["position"] = position
 end
-
-local frame_events = {}
 
 --- 玩家：事件添加
 --- @param uid integer 玩家uid
 --- @param event table 玩家事件信息
 function CMD.player_event_add(uid, event)
-    table.insert(frame_events, { uid = uid, type = event.type, body = event.body })
+    if behavior_module and behavior_module.handle_player_event then
+        behavior_module.handle_player_event(uid, event, room_state)
+    else
+        -- Default behavior if no module handles it
+        table.insert(room_state.frame_events, { uid = uid, type = event.type, body = event.body })
+    end
 end
 
 -- 内部函数：广播消息给房间内其他玩家
 function frame_syncer()
     while true do
         skynet.sleep(2)          -- 保持原来的同步间隔
-        if player_count > 0 then -- 增加检查 room_tx_to_players 是否存在
+        if player_count > 0 and room_state.room_tx_to_players then -- Check room_tx_to_players exists
             local frame_buffer = {
-                in_room_players = players,
-                events = frame_events,
+                in_room_players = room_state.players,
+                events = room_state.frame_events,
                 timestamp = skynet.now(),
             }
-            -- skynet.error(type(1))
-            room_tx_to_players:publish({ type = "frame_sync", body = frame_buffer })
 
-            frame_events = {}
+            -- Allow behavior module to add/modify sync data
+            if behavior_module and behavior_module.get_frame_sync_data then
+                local behavior_data = behavior_module.get_frame_sync_data(room_state)
+                if behavior_data then
+                    for k, v in pairs(behavior_data) do
+                        frame_buffer[k] = v
+                    end
+                end
+            end
+
+            room_state.room_tx_to_players:publish({ type = "frame_sync", body = frame_buffer })
+
+            room_state.frame_events = {} -- Clear events after sending
         end
-        -- 如果 player_count <= 0，循环继续，等待玩家加入
+        -- If player_count <= 0, the loop continues, waiting for players
     end
 end
 
 s.open = function()
     s.CMD = CMD
-    -- 在此处加载角色数据
-    room_tx_to_players = mc.new()
+    room_state.room_tx_to_players = mc.new() -- Assign to shared state
+
+    -- Load and initialize behavior module based on room_type
+    if room_type == "pvp" then
+        Log("Loading PvP behavior module...")
+        behavior_module = require("service.room_actor.pvp") -- Direct require, will error out if pvp.lua fails
+        if behavior_module.init then
+            behavior_module.init(room_state)
+        else
+            Log("PvP module loaded but has no init function.")
+        end
+    else
+        Log("Room type is not PvP, running basic room logic.")
+    end
+
     skynet.fork(frame_syncer)
 end
 
 s.close = function()
+    -- Call behavior module's close function if it exists
+    if behavior_module and behavior_module.on_close then
+        behavior_module.on_close(room_state)
+    end
+
     -- 2. 通知 room_mgr 房间已销毁
     Log("通知 Room Manager")
     local ok, err = pcall(skynet.call, ".ROOM_MGR", "lua", "room_destroyed", s.ip)
@@ -113,11 +168,9 @@ s.close = function()
     -- 3. （可选）通知房间内剩余玩家（如果需要）
     -- 这里可以添加逻辑，例如通过其他方式通知玩家房间关闭
     -- 通知房间内所有玩家房间已销毁
-    if player_count > 0 then
+    if player_count > 0 and room_state.room_tx_to_players then
         Log("广播房间销毁通知给玩家")
-        room_tx_to_players:publish({ type = "room_destroyed", body = { ["s.ip"] = s.ip } })
-        -- 短暂等待，确保消息有机会发出
-        -- skynet.sleep(10)
+        room_state.room_tx_to_players:publish({ type = "room_destroyed", body = { ["s.ip"] = s.ip } })
     end
 
     -- 4. 退出服务

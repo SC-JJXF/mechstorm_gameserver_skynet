@@ -38,6 +38,7 @@ function rx_from_room(channel, source, msg)
         send_msg_to_client("msg", { message = "当前房间已关闭，您已被送回大厅。", sender = "system" })
     end
 end
+
 local function tx_to_room(type, body)
     if not current_room then
         return
@@ -73,8 +74,6 @@ function change_room_to(new_room)
 end
 
 
-
-
 -- Client message handlers
 function query_lobby_room_id(lobby_map_name)
     return skynet.call(skynet.queryservice("room_mgr"), "lua", "get_lobby_room",
@@ -96,8 +95,10 @@ local CMD = {}
 CMD.handle_client_message = function(message)
     local body = message.body
     if message.type == "in_lobby_change_room" then
-        cs(query_lobby_room_id, body.map_name)
-    elseif message.type == "position_update" then
+        cs(function (i)
+            change_room_to(query_lobby_room_id(i))
+        end, body.map_name)
+    elseif message.type == "in_room_position_update" then
         cs(update_position, body)
     elseif message.type == "in_room_event" then
         cs(user_event, body)
