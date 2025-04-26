@@ -1,5 +1,5 @@
 local skynet = require "skynet"
-local httpc = require "http.httpc" -- 修正：使用正确的模块路径
+local httpc = require "httpc"
 local cjson = require "cjson"
 
 local CMD = {}
