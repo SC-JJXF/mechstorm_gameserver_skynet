@@ -30,9 +30,9 @@ CMD.handle_client_message = function(message)
     local msg_type = message.type
     local body = message.body
 
-    if msg_type == "in_room" then
+    if msg_type == "roomctl" then
         cs(RoomModule.handle_client_message, body.type, body.body)
-    elseif msg_type == "in_room" then
+    elseif msg_type == "matchctl" then
 
     else
         Log("收到预期外的客户端消息 msg_type: " .. msg_type)

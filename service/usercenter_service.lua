@@ -1,5 +1,5 @@
 local skynet = require "skynet"
-local httpc = require "skynet.http"
+local httpc = require "http.httpc" -- 修正：使用正确的模块路径
 local cjson = require "cjson"
 
 local CMD = {}
@@ -21,15 +21,20 @@ function CMD.verify_token(token)
         Authorization = "Bearer " .. token
     }
 
-    -- 发起HTTP请求
-    local ok, code, body = pcall(httpc.request, "GET", auth_url, nil, headers)
+    -- 创建HTTP客户端并发起请求
+    local client = httpc.create()
+    local ok, status, body = pcall(client.request, client, {
+        url = auth_url,
+        method = "GET",
+        headers = headers
+    })
     if not ok then
-        skynet.error("HTTP request failed:", code)
+        skynet.error("HTTP request failed:", status)
         return false, "用户中心请求失败"
     end
 
-    if code ~= 200 then
-        skynet.error("Usercenter auth failed:", code, body)
+    if status ~= 200 then
+        skynet.error("Usercenter auth failed:", status, body)
         return false, "认证失败"
     end
 

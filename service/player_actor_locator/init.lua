@@ -1,3 +1,4 @@
+---用于快速根据UID定位到一个actor
 ---@diagnostic disable: lowercase-global
 local skynet = require "skynet"
 local s = require "service"

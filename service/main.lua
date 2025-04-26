@@ -16,6 +16,7 @@ skynet.start(function()
     -- 启动WebSocket服务
     skynet.uniqueservice("ws_server")
     -- skynet.manager.name(".ws_server", ws_server)
-
+    skynet.uniqueservice("player_actor_locator")
+    
     skynet.exit()
 end)

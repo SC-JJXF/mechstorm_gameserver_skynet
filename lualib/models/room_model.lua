@@ -11,7 +11,7 @@ ROOM.ROOM_TYPE = {
 
 ROOM.MAP_NAME = {
     hall = {
-        Z战队营地 = 1,
+        ["Z战队营地"] = 1, -- 使用引号和方括号确保key被正确解析
     },
 }
 

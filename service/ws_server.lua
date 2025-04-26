@@ -4,7 +4,6 @@ local websocket = require "http.websocket"
 local cjson = require "cjson"
 cjson.encode_sparse_array(true)
 
-local httpc = require "skynet.http" -- 引入 httpc
 
 local MODE = ...
 
@@ -18,8 +17,6 @@ if MODE == "agent" then
     ---@class WsHandler
     local ws_handler = {}
 
-    -- Get a reference to the locator service
-    local PLAYER_LOCATOR <const> = skynet.queryservice("player_locator")
 
     ---@type integer 认证超时时间，单位 1/100 秒 (5秒)
     local AUTH_TIMEOUT = 500
@@ -121,14 +118,14 @@ if MODE == "agent" then
 
             ---@type string
             local token = data.token
-            local ok, result = skynet.call(skynet.uniqueservice("usercenter_service"), "lua", "verify_token", token)
+            local ok, result = skynet.call(skynet.queryservice("usercenter_service"), "lua", "verify_token", token)
             
             if ok then
                 ---@type table
                 local user_info = result
                 skynet.error("Authentication successful for connection", id, "UID:", user_info.uid)
 
-                local existing_actor_addr = skynet.call(PLAYER_LOCATOR, "lua", "query", user_info.uid)
+                local existing_actor_addr = skynet.call(skynet.queryservice("player_locator"), "lua", "query", user_info.uid)
 
                 if existing_actor_addr then
 
@@ -253,7 +250,7 @@ if MODE == "agent" then
             end
         end)
     end)
-else -- 主服务逻辑 (MODE ~= "agent")
+else
     ---@type table<integer, integer> agent 服务地址列表
     local agents = {}
     ---@type integer 用于负载均衡的索引

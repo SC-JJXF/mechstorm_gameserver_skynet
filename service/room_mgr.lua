@@ -4,7 +4,7 @@ local active_rooms = {} -- 追踪所有活跃房间
 local lobby_mapid_room = {} -- 追踪每个地图的大厅房间 { [mapid] = room_id }
 
 local CMD = {}
-local ROOM_MODEL = (require "lualib.models.room_model")
+local ROOM_MODEL = (require "models.room_model") -- 修正：移除多余的 lualib 前缀
 
 function Log(...)
     skynet.error("[room_mgr]" .. ... .. "。")
@@ -89,7 +89,4 @@ skynet.start(function()
             skynet.error("Unknown command", cmd)
         end
     end)
-
-    skynet.register(".ROOM_MGR") -- 注册全局名字
-    Log("Room Manager 服务启动，注册名称 .ROOM_MGR")
 end)

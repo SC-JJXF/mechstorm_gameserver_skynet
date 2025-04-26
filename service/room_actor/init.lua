@@ -10,7 +10,6 @@ local player_count = 0
 
 local players = {}
 
--- Module to handle specific room behavior (e.g., PvP)
 local behavior_module = nil
 -- Shared state accessible by the behavior module
 local room_state = {
@@ -138,13 +137,13 @@ s.open = function()
 
     -- Load and initialize behavior module based on room_type
     if room_type == "pvp" then
-        Log("Loading PvP behavior module...")
-        behavior_module = require("service.room_actor.pvp") -- Direct require, will error out if pvp.lua fails
-        if behavior_module.init then
-            behavior_module.init(room_state)
-        else
-            Log("PvP module loaded but has no init function.")
-        end
+        -- Log("Loading PvP behavior module...")
+        -- behavior_module = require("service.room_actor.pvp") -- Direct require, will error out if pvp.lua fails
+        -- if behavior_module.init then
+        --     behavior_module.init(room_state)
+        -- else
+        --     Log("PvP module loaded but has no init function.")
+        -- end
     else
         Log("Room type is not PvP, running basic room logic.")
     end
@@ -160,17 +159,13 @@ s.close = function()
 
     -- 2. 通知 room_mgr 房间已销毁
     Log("通知 Room Manager")
-    local ok, err = pcall(skynet.call, ".ROOM_MGR", "lua", "room_destroyed", s.ip)
-    if not ok then
-        Log("通知 Room Manager 失败: " .. tostring(err))
-    end
+    skynet.call(skynet.queryservice("room_mgr"), "lua", "room_destroyed", s.ip)
 
-    -- 3. （可选）通知房间内剩余玩家（如果需要）
-    -- 这里可以添加逻辑，例如通过其他方式通知玩家房间关闭
+
     -- 通知房间内所有玩家房间已销毁
     if player_count > 0 and room_state.room_tx_to_players then
         Log("广播房间销毁通知给玩家")
-        room_state.room_tx_to_players:publish({ type = "room_destroyed", body = { ["s.ip"] = s.ip } })
+        room_state.room_tx_to_players:publish({ type = "room_destroyed", body = {} })
     end
 
     -- 4. 退出服务
