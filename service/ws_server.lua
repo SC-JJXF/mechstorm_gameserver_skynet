@@ -18,6 +18,9 @@ if MODE == "agent" then
     ---@class WsHandler
     local ws_handler = {}
 
+    -- Get a reference to the locator service
+    local PLAYER_LOCATOR <const> = skynet.queryservice("player_locator")
+
     ---@type integer 认证超时时间，单位 1/100 秒 (5秒)
     local AUTH_TIMEOUT = 500
 
@@ -123,11 +126,18 @@ if MODE == "agent" then
             if ok then
                 ---@type table
                 local user_info = result
-                skynet.error("Authentication successful for connection", id)
-                -- 认证成功，创建 player_actor
+                skynet.error("Authentication successful for connection", id, "UID:", user_info.uid)
+
+                local existing_actor_addr = skynet.call(PLAYER_LOCATOR, "lua", "query", user_info.uid)
+
+                if existing_actor_addr then
+
+                    Log("Login rejected for UID " .. user_info.uid .. ". Already active at " .. skynet.address(existing_actor_addr))
+                    send_error_and_close(id, "该账号正在该服务器中游戏，请在其他设备上退出游戏，或切换到其他服")
+                    return
+                end
+
                 create_player_actor(id, user_info)
-                -- 发送认证成功消息给客户端（可选）
-                ---@type table
                 local success_msg = { type = "auth_success" }
                 pcall(websocket.write, id, cjson.encode(success_msg))
             else
