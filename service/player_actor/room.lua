@@ -15,10 +15,6 @@ local room = {
     tx_to_players_chan = nil
 }
 
-
-local change_room_to
-local leave_current_room
-
 local function query_lobby_room_id(lobby_map_name)
     return skynet.call(skynet.queryservice("room_mgr"), "lua", "get_lobby_room",
         ROOM_MODEL.MAP_NAME.hall[lobby_map_name])
@@ -30,7 +26,7 @@ local function rx_from_room(channel, source, msg)
     elseif msg.type == "room_destroyed" then
         Log("RoomModule: Current room " .. (room.id or "unknown") .. " destroyed, returning to lobby.")
         local lobby_id = query_lobby_room_id("Z战队营地")
-        change_room_to(lobby_id)
+        M.change_room_to(lobby_id)
         send_msg_to_client("msg", { message = "当前房间已关闭，您已被送回大厅。", sender = "system" })
 
     end
@@ -44,7 +40,30 @@ function M.tx_to_room(type, body)
     skynet.send(room.id, "lua", "player_" .. type, user_info.uid, body)
 end
 
-leave_current_room = function()
+function M.handle_client_message(type, body)
+    if type == "change_lobby_room" then
+        if M.get_type() == "lobby" then
+            cs(function(map_name)
+                local target_lobby_id = M.query_lobby_room_id(map_name)
+                if target_lobby_id then
+                    M.change_room_to(target_lobby_id)
+                else
+                    Log("无法找到大厅房间: " .. map_name)
+                    send_msg_to_client("msg", { message = "目标地图不存在: " .. map_name, sender = "system" })
+                end
+            end, body.map_name)
+        else
+            Log("收到 'change_lobby_room' 消息但现在不在大厅中。当前房间类型: " .. (M.get_type() or "无"))
+            send_msg_to_client("msg", { message = "请先离开当前游戏房间。", sender = "system" }) -- 发送反馈给客户端
+        end
+        return
+    else
+        -- 其余消息原封不动转发给房间服务
+        cs(M.tx_to_room, type, body)
+    end
+end
+
+function M.leave_current_room()
     if room.id then
         Log("RoomModule: Leaving room " .. room.id)
         pcall(skynet.call, room.id, "lua", "player_leave", user_info.uid)
@@ -57,10 +76,10 @@ leave_current_room = function()
     room.type = nil
     Log("RoomModule: Left room. State cleared.")
 end
-M.leave_current_room = leave_current_room
 
-change_room_to = function(new_room_id)
-    leave_current_room()
+
+local change_room_to = function(new_room_id)
+    M.leave_current_room()
 
     Log("RoomModule: Attempting to enter room " .. new_room_id)
     
