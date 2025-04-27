@@ -1,5 +1,5 @@
 local skynet = require "skynet"
-local httpc = require "httpc"
+local httpc = require "http.httpc"
 local cjson = require "cjson"
 
 local CMD = {}
@@ -13,7 +13,7 @@ function CMD.verify_token(token)
     local usercenter_url = skynet.getenv "usercenter_url"
     if not usercenter_url then
         skynet.error("usercenter_url not configured!")
-        return false, "用户中心未配置"
+        return false, "用户中心url未配置"
     end
 
     local auth_url = usercenter_url .. "/api/auth/current"
