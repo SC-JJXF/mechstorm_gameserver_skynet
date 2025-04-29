@@ -20,4 +20,4 @@ lua_cpath = "./luaclib/?.so;" .. "./skynet/luaclib/?.so"
 
 -- 本项目相关设置
 websocket_port = 8888
-usercenter_url = "0.0.0.0:5150"
+usercenter_url = "http://localhost:5150"

@@ -54,7 +54,7 @@ end
 
 s.open = function()
     s.CMD = CMD
-
+    Log("启动")
     skynet.call(skynet.queryservice("player_locator"), "lua", "register", user_info.uid, s.self())
     skynet.fork(hello)
     -- 在此处加载角色数据 (占位符)

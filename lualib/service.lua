@@ -61,7 +61,7 @@ end
 
 
 function Log(err)
-    skynet.error("[ " .. M.name .. " ] " .. tostring(err))
+    skynet.error("[" .. M.name .. "] " .. tostring(err))
 end
 
 function Traceback(err)

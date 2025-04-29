@@ -5,9 +5,6 @@ local s = require "service"
 
 -- 存储映射: uid -> player_actor_address
 local players = {}
--- 可选: 反向映射，如果需要通过地址高效地取消注册，
--- 但主要由该模型中的 UID 或源地址驱动。
--- local address_to_uid = {}
 
 local CMD = {}
 
@@ -62,7 +59,7 @@ end
 function CMD.query(uid)
     uid = tonumber(uid)
     local addr = players[uid]
-    Log("查询 UID " .. uid .. ": " .. (addr and skynet.address(addr) or "未找到"))
+    Log("查询 UID " .. uid .. " -> " .. (addr and skynet.address(addr) or "未找到"))
     return addr
 end
 

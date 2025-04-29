@@ -9,8 +9,7 @@ local MODE = ...
 
 if MODE == "agent" then
     ---@class ConnStateWaitingAuth
-    ---@field state "waiting_auth"
-    ---@field timer integer skynet timer id
+    ---@field state "waiting_auth" | "authenticated"
     ---@alias ConnState integer | ConnStateWaitingAuth actor_address or waiting state
     ---@type table<integer, ConnState>
     local connection_to_actor = {}
@@ -32,8 +31,10 @@ if MODE == "agent" then
                 message = message
             }
         }
-        pcall(websocket.write, id, cjson.encode(err_msg)) -- 使用 pcall 以防写入时连接已关闭
-        pcall(websocket.close, id)
+        -- pcall(websocket.write,id, cjson.encode(err_msg))
+        -- pcall(websocket.close,id)
+        websocket.write(id,cjson.encode(err_msg))
+        websocket.close(id)
         connection_to_actor[id] = nil -- 清理状态
     end
 
@@ -55,21 +56,6 @@ if MODE == "agent" then
         skynet.error("agent：新客户端连接！socket_id：" .. id)
     end
 
-    --- 创建玩家 Actor
-    ---@param fd integer WebSocket 连接 ID
-    ---@param user_info table 从用户中心获取的用户信息
-    ---@return integer player_actor 的 skynet 服务地址
-    local function create_player_actor(fd, user_info)
-        local function send_msg_to_client(type, body)
-            skynet.send(skynet.self(), "lua", "send", fd, type, body)
-        end
-
-        ---@type integer
-        local actor = skynet.newservice("player_actor", send_msg_to_client , user_info)
-        
-        connection_to_actor[fd] = actor
-        return actor
-    end
 
     --- WebSocket 握手回调
     ---@param id integer WebSocket 连接 ID
@@ -77,24 +63,37 @@ if MODE == "agent" then
     ---@param url string 请求的 URL
     ---@return boolean 是否允许握手
     function ws_handler.handshake(id, header, url)
-        ---@type string
-        local addr = websocket.addrinfo(id)
-        skynet.error("ws 握手 from: " .. tostring(id), "url", url, "addr:", addr)
 
         if url == "/v1/connect_to_my_actor" then
             -- 不立即创建 actor，而是等待客户端发送 token
             ---@type integer
-            local timer_id = skynet.timeout(AUTH_TIMEOUT, function()
+            skynet.timeout(AUTH_TIMEOUT, function()
                 handle_auth_timeout(id)
             end)
-            connection_to_actor[id] = { state = "waiting_auth", timer = timer_id }
-            skynet.error("Connection", id, "waiting for authentication token.")
+            connection_to_actor[id] = { state = "waiting_auth"}
+            skynet.error("Connection", id, "等待客户端提交token.")
             return true -- 握手成功，等待后续认证消息
         end
 
-        skynet.error("Invalid URL，目前只接受 /v1/connect_to_my_actor")
         send_error_and_close(id,"Invalid URL，目前只接受 /v1/connect_to_my_actor")
         return false
+    end
+
+
+    --- 创建玩家 Actor
+    ---@param fd integer WebSocket 连接 ID
+    ---@param user_info table 从用户中心获取的用户信息
+    ---@return integer player_actor 的 skynet 服务地址
+    local function create_player_actor(fd, user_info)
+        local myip = skynet.self()
+        -- skynet.error("create_player_actor",myip)
+        local function send_msg_to_client(type, body)
+            skynet.send(myip, "lua", "send", fd, type, body)
+        end
+        skynet.error("create_player_actor... skynet.newservice(player_actor",send_msg_to_client)
+        local i =skynet.newservice("player_actor", send_msg_to_client , user_info)
+        skynet.error("create_player_actor...","ok")
+        return i
     end
 
     --- WebSocket 收到消息回调
@@ -105,11 +104,8 @@ if MODE == "agent" then
         local conn_state = connection_to_actor[id]
 
         if type(conn_state) == "table" and conn_state.state == "waiting_auth" then
-            -- 处理认证消息
-            skynet.timeout(conn_state.timer, nil) -- 取消超时定时器
-
             local ok, data = pcall(cjson.decode, msg)
-            
+
             if not ok or type(data) ~= "table" or type(data.token) ~= "string" then
                 skynet.error("Invalid auth message format from client", id, msg)
                 send_error_and_close(id, "无效的认证消息格式")
@@ -118,52 +114,48 @@ if MODE == "agent" then
 
             ---@type string
             local token = data.token
-            local ok, result = skynet.call(skynet.queryservice("usercenter_service"), "lua", "verify_token", token)
+            local ok, user_info = skynet.call(skynet.queryservice("usercenter_service"), "lua", "verify_token", token)
             
             if ok then
                 ---@type table
-                local user_info = result
-                skynet.error("Authentication successful for connection", id, "UID:", user_info.uid)
+                connection_to_actor[id] = {state = "authenticated"}
 
-                local existing_actor_addr = skynet.call(skynet.queryservice("player_locator"), "lua", "query", user_info.uid)
+                skynet.error("Authentication successful for connection ", id, " UID:", user_info.uid)
 
+                local existing_actor_addr = skynet.call(skynet.queryservice("player_actor_locator"), "lua", "query", user_info.uid)
+                -- skynet.error(existing_actor_addr)
                 if existing_actor_addr then
-
                     Log("Login rejected for UID " .. user_info.uid .. ". Already active at " .. skynet.address(existing_actor_addr))
-                    send_error_and_close(id, "该账号正在该服务器中游戏，请在其他设备上退出游戏，或切换到其他服")
+                    send_error_and_close(id, "该用户正在本服务器中游戏，请在其他设备上退出游戏，或切换到其他服务器（如果有）")
                     return
                 end
 
-                create_player_actor(id, user_info)
+                connection_to_actor[id] = create_player_actor(id, user_info)
+                skynet.error(connection_to_actor[id])
                 local success_msg = { type = "auth_success" }
-                pcall(websocket.write, id, cjson.encode(success_msg))
+                websocket.write(id, cjson.encode(success_msg))
             else
-                skynet.error("Authentication failed for connection", id, "Error:", result)
-                send_error_and_close(id, result)
+                skynet.error("Authentication failed for connection", id, "Error:", user_info)
+                send_error_and_close(id, user_info)
             end
+            
+        else
             ---@cast conn_state integer
-        elseif type(conn_state) == "number" then -- 已经认证，conn_state 是 actor 地址
+            -- 已经认证，conn_state 是 actor 地址
             -- 转发消息给 player_actor
-
             local ok, data = pcall(cjson.decode, msg)
-
             if not ok then
                 skynet.error("Invalid JSON message from client", id, msg)
                 -- 可以选择是否关闭连接或仅忽略消息
                 return
             end
             skynet.send(conn_state, "lua", "handle_client_message", data)
-        else
-            -- 既不是等待认证，也不是已分配 actor 的状态，可能连接已关闭或状态异常
-            skynet.error("Received message for unknown or closed connection state", id)
-            pcall(websocket.close, id) -- 尝试关闭以防万一
         end
     end
 
     --- WebSocket收到 ping 回调
     ---@param id integer WebSocket 连接 ID
     function ws_handler.ping(id)
-        -- 回应客户端的ping
         websocket.pong(id)
     end
 
@@ -180,17 +172,13 @@ if MODE == "agent" then
     function ws_handler.close(id, code, reason)
         ---@type ConnState | nil
         local conn_state = connection_to_actor[id]
-        if type(conn_state) == "table" and conn_state.state == "waiting_auth" then
-            -- 如果正在等待认证，取消超时定时器
-            skynet.timeout(conn_state.timer, nil)
-            skynet.error("ws close while waiting auth:", id, code, reason)
-        elseif type(conn_state) == "number" then
+        if type(conn_state) == "table" then
+            skynet.error("ws close while ", conn_state.state ,":",id, code, reason)
+        else
             -- 如果已经连接到 actor，通知 actor
             ---@cast conn_state integer
             skynet.send(conn_state, "lua", "client_disconnected")
             skynet.error("ws close from:", id, code, reason)
-        else
-             skynet.error("ws close for unknown state:", id, code, reason)
         end
         connection_to_actor[id] = nil -- 清理状态
     end
@@ -223,7 +211,6 @@ if MODE == "agent" then
             skynet.error("Failed to encode message to JSON. Type:", msg_type, "Error:", json_str)
             return
         end
-        -- 使用 pcall 包装 websocket.write 以处理可能的写入错误
         websocket.write(ws_id, json_str)
     end
 
@@ -232,11 +219,7 @@ if MODE == "agent" then
     ---@param protocol string 协议 ("ws" or "wss")
     ---@param addr string 客户端地址
     function CMD.handle_wssocket(id, protocol, addr)
-        
-        local ok, err = websocket.accept(id, ws_handler, protocol, addr)
-        if not ok then
-            skynet.error(err)
-        end
+       websocket.accept(id, ws_handler, protocol, addr)
     end
 
     skynet.start(function()
