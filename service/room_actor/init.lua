@@ -1,4 +1,3 @@
----@diagnostic disable: lowercase-global
 local skynet = require "skynet"
 local mc = require "skynet.multicast"
 local s = require "service"
@@ -11,10 +10,11 @@ local player_count = 0
 local players = {}
 
 local behavior_module = nil
+local frame_events = {}
+
 -- Shared state accessible by the behavior module
 local room_state = {
     players = players,
-    frame_events = {}, -- Moved frame_events here to be part of shared state
     room_tx_to_players = nil, -- Will be assigned in s.open
     room_type = room_type,
     mapid = room_mapid,
@@ -98,7 +98,7 @@ function CMD.player_event_add(uid, event)
         behavior_module.handle_player_event(uid, event, room_state)
     else
         -- Default behavior if no module handles it
-        table.insert(room_state.frame_events, { uid = uid, type = event.type, body = event.body })
+        table.insert(frame_events, { uid = uid, type = event.type, body = event.body })
     end
 end
 
@@ -109,7 +109,7 @@ function frame_syncer()
         if player_count > 0 and room_state.room_tx_to_players then -- Check room_tx_to_players exists
             local frame_buffer = {
                 in_room_players = room_state.players,
-                events = room_state.frame_events,
+                events = frame_events,
                 timestamp = skynet.now(),
             }
 
@@ -125,7 +125,7 @@ function frame_syncer()
 
             room_state.room_tx_to_players:publish({ type = "frame_sync", body = frame_buffer })
 
-            room_state.frame_events = {} -- Clear events after sending
+            frame_events = {} -- Clear events after sending
         end
         -- If player_count <= 0, the loop continues, waiting for players
     end

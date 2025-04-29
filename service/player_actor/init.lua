@@ -3,7 +3,7 @@ local skynet = require "skynet"
 local s = require "service"
 local cjson = require "cjson"
 cs = (require "skynet.queue")()
-local RoomModule = require "service.player_actor.room"
+local RoomModule = require "service.player_actor.roomctl"
 
 
 local f_send_msg_to_client, user_data = ...

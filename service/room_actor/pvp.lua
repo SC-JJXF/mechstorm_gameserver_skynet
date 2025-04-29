@@ -19,7 +19,7 @@ function M.handle_player_event(uid, event, room_state)
     Log("PvP handling event from " .. uid .. ": type=" .. tostring(event.type))
     -- Handle events like 'attack', 'skill_cast', etc.
     -- Modify room_state.players based on PvP rules (e.g., HP changes)
-    -- Add PvP specific events to room_state.frame_events if needed
+    -- Add PvP specific events to frame_events if needed
 end
 
 -- Called by frame_syncer to get PvP specific data for the sync packet
