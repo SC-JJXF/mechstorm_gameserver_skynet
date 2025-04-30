@@ -3,6 +3,7 @@ local bump = require "bump"
 local M = {}
 
 function M.on_open()
+    bump.newWorld()
 end
 
 function M.on_close()
@@ -21,7 +22,7 @@ end
 function M.handle_player_event(uid, event)
     -- 在这里处理玩家事件
     -- 例如：攻击、技能、移动等
-    
+
     -- 根据事件类型处理不同的逻辑
     if event.type == "attack" then
         -- 处理攻击事件

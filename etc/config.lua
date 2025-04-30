@@ -14,6 +14,10 @@ luaservice = "./service/?.lua;" .."./service/?/init.lua;".. "./skynet/service/?.
 lua_path = "./etc/?.lua;" .. "./lualib/?.lua;" ..  "./skynet/lualib/?.lua;" .. "./skynet/lualib/?/init.lua"
 lua_cpath = "./luaclib/?.so;" .. "./skynet/luaclib/?.so"
 
+-- lualib-3rd
+lua_path = lua_path .. ";./lualib-3rd/share/lua/5.4/?.lua"
+lua_cpath = lua_path .. ";./lualib-3rd/lib/lua/5.4/?.so"
+
 --后台模式
 --daemon = "./skynet.pid"
 --logger = "./userlog"
