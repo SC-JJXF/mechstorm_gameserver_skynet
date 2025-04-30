@@ -1,9 +1,12 @@
 <mxfile host="65bd71144e">
     <diagram id="Ame8QqfA8L-OFSZj6T8L" name="第 1 页">
-        <mxGraphModel dx="1964" dy="1356" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="1196" dy="979" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
+                <mxCell id="70" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="90" y="1143" width="90" height="60" as="geometry"/>
+                </mxCell>
                 <mxCell id="19" style="edgeStyle=none;curved=1;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=20;endArrow=open;startSize=14;endSize=14;sourcePerimeterSpacing=8;targetPerimeterSpacing=8;exitX=0.5;exitY=0;exitDx=0;exitDy=0;sketch=1;curveFitting=1;jiggle=2;" parent="1" source="2" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="123.49999999999977" y="176.9456787109376" as="targetPoint"/>
@@ -85,7 +88,7 @@
                     <mxGeometry x="1512" y="290" width="134" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="34" value="&lt;b&gt;实线画的方块&lt;/b&gt;代表skynet启动后就存在的服务（角色）&lt;br&gt;&lt;br&gt;&lt;b&gt;虚线&lt;/b&gt;的是在运行过程中动态创建出来的服务（克隆体），对应lua代码文件名一律以“&lt;span style=&quot;font-size: 13px;&quot;&gt;_actor”结尾&lt;/span&gt;" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;fontColor=#000000;darkOpacity=0.05;fillColor=#FFF9B2;strokeColor=none;fillStyle=solid;direction=west;gradientDirection=north;gradientColor=#FFF2A1;shadow=1;size=20;pointerEvents=1;dashed=1;strokeWidth=2;fontSize=14;verticalAlign=top;align=left;spacing=6;rounded=0;sketch=1;curveFitting=1;jiggle=2;" parent="1" vertex="1">
-                    <mxGeometry x="-191" y="-163" width="212.5" height="145" as="geometry"/>
+                    <mxGeometry x="-172.5" y="-163" width="212.5" height="145" as="geometry"/>
                 </mxCell>
                 <mxCell id="35" value="3.&amp;nbsp;&lt;span style=&quot;color: rgba(0, 0, 0, 0); font-family: monospace; font-size: 0px;&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20value%3D%222.%26amp%3Bnbsp%3B%26lt%3Bspan%20style%3D%26quot%3Bfont-size%3A%2013px%3B%20text-align%3A%20center%3B%26quot%3B%26gt%3Bws_server%E8%B4%9F%E8%B4%A3%E9%89%B4%E6%9D%83%E3%80%81%E5%85%8B%E9%9A%86%E5%87%BA%E7%8E%A9%E5%AE%B6%E5%AF%B9%E5%BA%94%E7%9A%84%26lt%3B%2Fspan%26gt%3B%26lt%3Bspan%20style%3D%26quot%3Bfont-size%3A%2013px%3B%26quot%3B%26gt%3Bplayer_actor%26lt%3B%2Fspan%26gt%3B%26lt%3Bspan%20style%3D%26quot%3Bfont-size%3A%2013px%3B%20text-align%3A%20center%3B%26quot%3B%26gt%3B%26lt%3Bbr%26gt%3B%26lt%3Bbr%26gt%3B%26lt%3B%2Fspan%26gt%3B%22%20style%3D%22shape%3Dcallout%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3Bperimeter%3DcalloutPerimeter%3BstrokeWidth%3D3%3BfontSize%3D16%3BflipH%3D1%3BflipV%3D1%3Balign%3Dleft%3BverticalAlign%3Dtop%3B%22%20vertex%3D%221%22%20parent%3D%221%22%3E%3CmxGeometry%20x%3D%2263.5%22%20y%3D%22615%22%20width%3D%22142.5%22%20height%3D%22144%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3&lt;/span&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;player_actor 扮演对应&lt;/span&gt;&lt;span style=&quot;font-size: 13px;&quot;&gt;玩家&lt;/span&gt;&lt;span style=&quot;font-size: 13px; text-align: center;&quot;&gt;&lt;br&gt;&lt;/span&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;strokeWidth=2;fontSize=16;flipH=1;flipV=1;align=left;verticalAlign=top;rounded=0;sketch=1;curveFitting=1;jiggle=2;" parent="1" vertex="1">
                     <mxGeometry x="251" y="593" width="142.5" height="94" as="geometry"/>
@@ -143,6 +146,15 @@
                 </mxCell>
                 <mxCell id="65" value="场景模块的设计来自：&lt;br&gt;&lt;br&gt;https://blog.csdn.net/yangyu20121224/article/details/130199322" style="shape=note;html=1;backgroundOutline=1;fontColor=#000000;darkOpacity=0.05;fillColor=#FFF9B2;strokeColor=none;fillStyle=solid;direction=west;gradientDirection=north;gradientColor=#FFF2A1;shadow=1;size=20;pointerEvents=1;dashed=1;strokeWidth=2;fontSize=14;verticalAlign=top;align=left;whiteSpace=wrap;rounded=0;sketch=1;curveFitting=1;jiggle=2;" parent="1" vertex="1">
                     <mxGeometry x="237" y="88" width="407" height="87" as="geometry"/>
+                </mxCell>
+                <mxCell id="72" value="P1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
+                    <mxGeometry x="75" y="1143" width="30" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="73" value="P2" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
+                    <mxGeometry x="179" y="1143" width="30" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="71" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="189" y="1168" width="10" height="10" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

@@ -1,49 +1,38 @@
---- PvP specific logic module for room_actor
-local skynet = require "skynet"
+local bump = require "bump"
 
 local M = {}
 
--- Called when a PvP room is initialized
--- @param room_state A table containing the shared room state (players, room_tx_to_players, etc.)
-function M.init(room_state)
-    Log("PvP module initialized.")
-    -- Initialize PvP specific state if needed
-    room_state.pvp_data = {} -- Example placeholder
+function M.on_open()
 end
 
--- Called when a player adds an event in a PvP room
--- @param uid Player UID
--- @param event The event data
--- @param room_state Shared room state
-function M.handle_player_event(uid, event, room_state)
-    Log("PvP handling event from " .. uid .. ": type=" .. tostring(event.type))
-    -- Handle events like 'attack', 'skill_cast', etc.
-    -- Modify room_state.players based on PvP rules (e.g., HP changes)
-    -- Add PvP specific events to frame_events if needed
+function M.on_close()
 end
 
--- Called by frame_syncer to get PvP specific data for the sync packet
--- @param room_state Shared room state
--- @return A table with PvP data, or nil
-function M.get_frame_sync_data(room_state)
-    -- Example: return scores, special states, etc.
-    -- return { scores = room_state.pvp_data.scores }
-    return nil -- Placeholder
+function M.on_player_enter(uid, player_sprite_info)
 end
 
--- Called when a player leaves a PvP room
--- @param uid Player UID
--- @param room_state Shared room state
-function M.on_player_leave(uid, room_state)
-    Log("PvP handling player leave: " .. uid)
-    -- Clean up any PvP state related to the player
+function M.on_player_leave(uid)
 end
 
--- Called when the PvP room is closing
--- @param room_state Shared room state
-function M.on_close(room_state)
-    Log("PvP module closing.")
-    -- Clean up any global PvP state for the room
+-- 处理玩家事件
+-- @param uid 玩家ID
+-- @param event 事件信息
+-- @return boolean 如果事件被处理返回 true，否则返回 false
+function M.handle_player_event(uid, event)
+    -- 在这里处理玩家事件
+    -- 例如：攻击、技能、移动等
+    
+    -- 根据事件类型处理不同的逻辑
+    if event.type == "attack" then
+        -- 处理攻击事件
+        return true
+    elseif event.type == "skill" then
+        -- 处理技能事件
+        return true
+    end
+    
+    -- 返回 false 代表继续传播这个事件
+    return false
 end
 
 return M
