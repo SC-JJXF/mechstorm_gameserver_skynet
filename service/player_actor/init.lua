@@ -55,7 +55,7 @@ end
 s.open = function()
     s.CMD = CMD
     Log("启动")
-    skynet.call(skynet.queryservice("player_locator"), "lua", "register", user_info.uid, s.self())
+    -- skynet.call(skynet.queryservice("player_actor_locator"), "lua", "register", user_info.uid, s.self())
     skynet.fork(hello)
     -- 在此处加载角色数据 (占位符)
     -- skynet.sleep(200)
@@ -63,7 +63,7 @@ end
 
 s.close = function()
     RoomModule.leave_current_room()
-    skynet.call(skynet.queryservice("player_locator"), "lua", "unregister", user_info.uid, s.self())
+    skynet.call(skynet.queryservice("player_actor_locator"), "lua", "unregister", user_info.uid, s.self())
 
     -- 在此处保存角色数据 (占位符)
     -- skynet.sleep(200)

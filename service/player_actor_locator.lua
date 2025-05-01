@@ -71,4 +71,4 @@ end
 s.close = function()
 end
 
-s.start "player_locator"
+s.start "player_actor_locator"

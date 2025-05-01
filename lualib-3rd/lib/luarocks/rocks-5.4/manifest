@@ -1,7 +1,7 @@
 commands = {}
 dependencies = {
-   bump = {
-      ["3.1.7-1"] = {
+   ["bump-3dpd"] = {
+      ["0.2.0-1"] = {
          {
             constraints = {
                {
@@ -17,19 +17,19 @@ dependencies = {
    }
 }
 modules = {
-   bump = {
-      "bump/3.1.7-1"
+   ["bump-3dpd"] = {
+      "bump-3dpd/0.2.0-1"
    }
 }
 repository = {
-   bump = {
-      ["3.1.7-1"] = {
+   ["bump-3dpd"] = {
+      ["0.2.0-1"] = {
          {
             arch = "installed",
             commands = {},
             dependencies = {},
             modules = {
-               bump = "bump.lua"
+               ["bump-3dpd"] = "bump-3dpd.lua"
             }
          }
       }

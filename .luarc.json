@@ -1,0 +1,26 @@
+{
+    "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema-zh-cn.json",
+    "diagnostics": {
+        "ignoredFiles": "Opened",
+        "libraryFiles": "Opened",
+        "unusedLocalExclude": [
+            "_*"
+        ]
+    },
+    "runtime": {
+        "version": "Lua 5.4",
+        "unicodeName": true
+    },
+    "workspace": {
+        "ignoreDir": [
+            "/.vscode",
+            "/etc"
+        ],
+        "library": [
+            "lualib-3rd/share/lua/5.4/",
+            "${addons}/skynet/module/library/",
+            "skynet/lualib/"
+        ],
+        "checkThirdParty": true
+    }
+}

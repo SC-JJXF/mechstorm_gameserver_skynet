@@ -4,7 +4,6 @@ local websocket = require "http.websocket"
 local cjson = require "cjson"
 cjson.encode_sparse_array(true)
 
-
 local MODE = ...
 
 if MODE == "agent" then
@@ -251,7 +250,6 @@ else
 
 
         -- 启动WebSocket监听
-        ---@type integer
         local port = assert(tonumber(skynet.getenv("websocket_port")), "websocket_port not configured or not a number")
         ---@type string
         local protocol = "ws" -- or "wss" if needed

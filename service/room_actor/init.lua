@@ -1,7 +1,10 @@
 local skynet = require "skynet"
 local mc = require "skynet.multicast"
 local s = require "service"
-local sprite_model = (require "lualib.models.sprite_model")
+
+
+local sprite_model = (require "models.sprite_model")
+local room_model = (require "models.room_model")
 
 local room_type, room_mapid = ...
 
@@ -10,11 +13,13 @@ local players = {}
 
 local frame_events = {}
 
+
 -- Shared state accessible by the roomfunc_modules
 Room_state = {
     players = players,
     room_type = room_type,
     mapid = room_mapid,
+    world = nil
 }
 
 local room_tx_to_players = nil
@@ -67,11 +72,12 @@ end
 
 --- 玩家加入房间 返回帮助玩家连接到房间频道的 connection_info
 function CMD.player_enter(uid, player_sprite_info)
-    call_module_func("on_player_enter", uid, player_sprite_info)
 
     players[uid] = player(player_sprite_info)
     player_count = player_count + 1
     Log("玩家加入房间，当前玩家数量：" .. player_count)
+    call_module_func("on_player_enter", uid, player_sprite_info)
+
     return {
         ---@diagnostic disable-next-line: need-check-nil, undefined-field
         room_tx_channel_id = room_tx_to_players.channel,
@@ -81,11 +87,12 @@ end
 
 -- 玩家离开房间
 function CMD.player_leave(uid)
-    -- 通知所有模块玩家离开
-    call_module_func("on_player_leave", uid)
+
 
     player_count = player_count - 1
     players[uid] = nil
+    call_module_func("on_player_leave", uid)
+
     Log("玩家离开房间，当前玩家数量：" .. player_count)
 
     -- Check if room should be destroyed when empty (optional, depends on game logic)
@@ -99,6 +106,7 @@ end
 --- @param uid integer 玩家uid
 --- @param position table 玩家位置信息
 function CMD.player_position_update(uid, position)
+    call_module_func("on_player_position_update", uid, position)
     -- Log("玩家位置更新：" .. uid .. " -> " .. cjson.encode(position))
     players[uid]["sprite"]["position"] = position
 end
@@ -137,12 +145,11 @@ s.open = function()
     s.CMD = CMD
     room_tx_to_players = mc.new()
 
-    if room_type == "pvp" then
-        table.insert(roomfunc_modules,(require "pvp"))
+    if room_type == room_model.ROOM_TYPE.LOBBY then
+        -- table.insert(roomfunc_modules,(require "room_actor.sprite_skill"))
     end
 
     call_module_func("on_open")
-
     skynet.fork(frame_syncer)
 end
 

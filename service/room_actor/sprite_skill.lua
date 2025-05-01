@@ -1,36 +1,42 @@
-local bump = require "bump-3dpd"
 
 local M = {}
-local world
+local bump = require "bump-3dpd"
+local players = Room_state.players
+local world = Room_state.world
+
+world = bump.newWorld()
 
 function M.on_open()
     world = bump.newWorld()
 end
 
 function M.on_close()
+    world = nil
 end
 
 function M.on_player_enter(uid, player_sprite_info)
+    world:add(players[uid])
 end
 
 function M.on_player_leave(uid)
+    world:remove(players[uid])
+end
+
+function M.on_player_position_update(uid, position)
+    world:update(players[uid], position.x, position.y, position.z)
 end
 
 function M.handle_player_event(uid, event)
-    -- 在这里处理玩家事件
-    -- 例如：攻击、技能、移动等
 
-    -- 根据事件类型处理不同的逻辑
     if event.type == "attack" then
-        -- 处理攻击事件
-        return true
+        return false
     elseif event.type == "skill" then
-        -- 处理技能事件
         return true
     end
     
     -- 返回 false 代表继续传播这个事件
     return false
 end
+
 
 return M

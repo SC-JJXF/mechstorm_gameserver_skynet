@@ -6,5 +6,5 @@
 
 ```bash
 # --lua-version=5.4 指定和本项目所用skynet相同的lua版本
-luarocks install --to ./lualib-3rd/ --lua-version=5.4 bump
+luarocks install --to ./lualib-3rd/ --lua-version=5.4 bump-3dpd
 ```

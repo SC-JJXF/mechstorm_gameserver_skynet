@@ -38,7 +38,6 @@ local dispatch = function(session, address, cmd, ...)
     local f = M.CMD[cmd]
     if not f then
         Log("调用 s.CMD." .. cmd.." 失败，未定义该指令的处理函数。" )
-        skynet.ret()
     else
         skynet.ret(skynet.pack(f(...)))
     end
