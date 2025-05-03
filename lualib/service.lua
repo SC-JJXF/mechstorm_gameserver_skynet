@@ -39,7 +39,7 @@ function S.CMD.close()
 end
 
 local dispatch = function(session, address, cmd, ...)
-    Log(cmd)
+    -- Log(cmd)
     local f = S.CMD[cmd]
     if f then
         skynet.ret(skynet.pack(f(...)))

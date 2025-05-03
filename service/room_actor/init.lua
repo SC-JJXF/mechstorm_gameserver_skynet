@@ -179,4 +179,4 @@ s.close = function()
 end
 
 s.CMD = CMD
-s.start ""
+s.start "room"
