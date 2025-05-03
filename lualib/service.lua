@@ -17,8 +17,18 @@ local M = {
 
 local S = {
     CMD = {},
+    isopen = false
 }
 
+function S.CMD.open(...)
+    if S.isopen then
+        Log("open已经被调用了。")
+        return
+    end
+    M.open(...)
+    S.isopen = true
+    Log("open调用成功，启动流结束。")
+end
 
 function S.CMD.close()
     Log("自销毁...")
@@ -29,9 +39,15 @@ function S.CMD.close()
 end
 
 local dispatch = function(session, address, cmd, ...)
+    Log(cmd)
     local f = S.CMD[cmd]
     if f then
         skynet.ret(skynet.pack(f(...)))
+        return
+    end
+
+    if not S.isopen then
+        Log("请将该错误反馈给开发者：在启动流未结束前不允许调用上层逻辑")
         return
     end
 
@@ -43,19 +59,22 @@ local dispatch = function(session, address, cmd, ...)
     end
 end
 
-local function init() --相较球球大作战项目加了个local（我觉得不应该暴露给业务层）
-    if M.open then
-        M.open()
-    end
-    skynet.dispatch("lua", dispatch)
-end
-
 -- 由上层调用
-function M.start(name, ...)
+function M.start(name)
     M.name = name
-    M.ip = skynet.self()
-    skynet.start(init)
-    Log("初始化完毕。")
+    skynet.start(function ()
+        M.ip = skynet.self()
+        skynet.dispatch("lua", dispatch)
+    end)
+    if M.open then
+        -- 启动参数其实是以字符串拼接的方式传递过去的。所以不要在参数中传递复杂的 Lua 对象。接收到的参数都是字符串，且字符串中不可以有空格（否则会被分割成多个参数）。
+        -- 这种参数传递方式是历史遗留下来的，有很多潜在的问题。目前推荐的惯例是，让你的服务响应一个启动消息。
+        -- 在 newservice 之后，立刻调用 skynet.call 发送启动请求。
+        Log("初始化完毕。请携带启动参数调用 open 完成启动流程。")
+    else
+        S.isopen = true
+        Log("初始化完毕。启动流结束。")
+    end
 end
 
 

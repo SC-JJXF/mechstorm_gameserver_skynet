@@ -3,22 +3,10 @@ local skynet = require "skynet"
 local s = require "service"
 local cjson = require "cjson"
 cs = (require "skynet.queue")()
-local RoomModule = require "service.player_actor.roomctl"
+local RoomModule = require "roomctl"
 
 
-local f_send_msg_to_client, user_data = ...
-
-user_info                             = {
-    uid = tonumber(user_data.uid),
-    nickname = user_data.nickname
-}
-
-sprite_info                           = {
-    nickname = user_data.nickname,
-    --- theme指明是哪个机甲
-    theme = "default",
-    max_HP = 56000
-}
+local f_send_msg_to_client, user_data
 
 
 function send_msg_to_client(type, body)
@@ -52,10 +40,23 @@ local hello = function()
     RoomModule.change_room_to(lobby_id)
 end
 
-s.open = function()
-    s.CMD = CMD
+s.open = function(...)
     Log("启动")
-    -- skynet.call(skynet.queryservice("player_actor_locator"), "lua", "register", user_info.uid, s.self())
+
+    f_send_msg_to_client, user_data = ...
+    Log(f_send_msg_to_client, user_data)
+    user_info                             = {
+        uid = tonumber(user_data.uid),
+        nickname = user_data.nickname
+    }
+    sprite_info                           = {
+        nickname = user_data.nickname,
+        --- theme指明是哪个机甲
+        theme = "default",
+        max_HP = 56000
+    }
+    s.name = "player " .. user_info.uid
+    skynet.call(skynet.queryservice("player_actor_locator"), "lua", "register", user_info.uid, s.ip)
     skynet.fork(hello)
     -- 在此处加载角色数据 (占位符)
     -- skynet.sleep(200)
@@ -69,4 +70,5 @@ s.close = function()
     -- skynet.sleep(200)
 end
 
-s.start("[player " .. user_info.uid .. " ] ", ...)
+s.CMD = CMD
+s.start("player")

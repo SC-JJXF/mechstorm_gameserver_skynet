@@ -45,8 +45,8 @@ skynet.start(function()
     ---@type string | nil
     Usercenter_url = skynet.getenv "usercenter_url"
     if not Usercenter_url then
-        skynet.error("usercenter_url not configured!")
-        return false, "用户中心url未配置"
+        skynet.error("用户中心url未配置！")
+        return
     end
 
     skynet.dispatch("lua", function(_, _, cmd, ...)

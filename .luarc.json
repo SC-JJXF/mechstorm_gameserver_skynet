@@ -14,13 +14,18 @@
     "workspace": {
         "ignoreDir": [
             "/.vscode",
-            "/etc"
+            "/etc",
+            "/skynet"
         ],
         "library": [
             "lualib-3rd/share/lua/5.4/",
             "${addons}/skynet/module/library/",
             "skynet/lualib/"
+            // "${3rd}/skynet/library"
         ],
         "checkThirdParty": true
-    }
+    },
+    "diagnostics.globals": [
+        "SERVICE_NAME"
+    ]
 }

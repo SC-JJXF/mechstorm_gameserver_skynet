@@ -1,16 +1,23 @@
 local skynet = require "skynet"
 local mc = require "skynet.multicast"
 local s = require "service"
+local bump = require "bump-3dpd"
 
 
 local sprite_model = (require "models.sprite_model")
 local room_model = (require "models.room_model")
 
-local room_type, room_mapid = ...
+local room_type, room_mapid
 
 local player_count = 0
 local players = {}
 
+
+---@class FrameEvent
+---@field uid integer 玩家uid
+---@field type string 事件类型
+---@field body string 事件内容
+---@type FrameEvent[]
 local frame_events = {}
 
 
@@ -19,7 +26,7 @@ Room_state = {
     players = players,
     room_type = room_type,
     mapid = room_mapid,
-    world = nil
+    world = bump.newWorld()
 }
 
 local room_tx_to_players = nil
@@ -116,16 +123,15 @@ end
 --- @param event table 玩家事件信息
 function CMD.player_event_add(uid, event)
     local event_handled = call_module_func("handle_player_event", uid, event)
-
-    if not event_handled then
-        table.insert(frame_events, { uid = uid, type = event.type, body = event.body })
-    end
+    table.insert(frame_events, { uid = uid, type = event.type, body = event.body })
 end
 
 -- 内部函数：广播消息给房间内其他玩家
 local function frame_syncer()
     while true do
-        skynet.sleep(2)          -- 保持原来的同步间隔
+        skynet.sleep(2)       -- 50fps左右
+
+        call_module_func("world_update")
         if player_count > 0 and room_tx_to_players then -- Check room_tx_to_players exists
             local frame_buffer = {
                 in_room_players = Room_state.players,
@@ -141,12 +147,12 @@ local function frame_syncer()
     end
 end
 
-s.open = function()
-    s.CMD = CMD
+s.open = function(...)
+    room_type, room_mapid = ...
     room_tx_to_players = mc.new()
 
-    if room_type == room_model.ROOM_TYPE.LOBBY then
-        -- table.insert(roomfunc_modules,(require "room_actor.sprite_skill"))
+    if room_type == room_model.ROOM_TYPE.PVP then
+        table.insert(roomfunc_modules,(require "room_actor.sprite_skill"))
     end
 
     call_module_func("on_open")
@@ -156,8 +162,6 @@ end
 s.close = function()
     call_module_func("on_close")
 
-    -- 2. 通知 room_mgr 房间已销毁
-    Log("通知 Room Manager")
     skynet.call(skynet.queryservice("room_mgr"), "lua", "room_destroyed", s.ip)
 
     -- 通知房间内所有玩家房间已销毁
@@ -173,4 +177,5 @@ s.close = function()
     -- skynet.sleep(200)
 end
 
-s.start("[room " .. room_type .. " ]", ...)
+s.CMD = CMD
+s.start("[room " .. room_type .. " ]")

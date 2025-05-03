@@ -84,13 +84,14 @@ if MODE == "agent" then
     ---@param user_info table 从用户中心获取的用户信息
     ---@return integer player_actor 的 skynet 服务地址
     local function create_player_actor(fd, user_info)
-        local myip = skynet.self()
-        -- skynet.error("create_player_actor",myip)
+        local gatewayIP = skynet.self()
         local function send_msg_to_client(type, body)
-            skynet.send(myip, "lua", "send", fd, type, body)
+            skynet.send(gatewayIP, "lua", "send", fd, type, body)
         end
-        skynet.error("create_player_actor... skynet.newservice(player_actor",send_msg_to_client)
-        local i =skynet.newservice("player_actor", send_msg_to_client , user_info)
+        -- skynet.error("newservice("player_actor")")
+        local i =skynet.newservice("player_actor")
+        skynet.error("call open")
+        skynet.call(i,"lua" ,"open", send_msg_to_client , user_info)
         skynet.error("create_player_actor...","ok")
         return i
     end
@@ -120,7 +121,8 @@ if MODE == "agent" then
                 connection_to_actor[id] = {state = "authenticated"}
 
                 skynet.error("Authentication successful for connection ", id, " UID:", user_info.uid)
-
+                
+                -- skynet.error("向 "..skynet.queryservice("player_actor_locator").." 查询...")
                 local existing_actor_addr = skynet.call(skynet.queryservice("player_actor_locator"), "lua", "query", user_info.uid)
                 -- skynet.error(existing_actor_addr)
                 if existing_actor_addr then
@@ -128,7 +130,7 @@ if MODE == "agent" then
                     send_error_and_close(id, "该用户正在本服务器中游戏，请在其他设备上退出游戏，或切换到其他服务器（如果有）")
                     return
                 end
-
+                skynet.error("创建 player_actor ...")
                 connection_to_actor[id] = create_player_actor(id, user_info)
                 skynet.error(connection_to_actor[id])
                 local success_msg = { type = "auth_success" }

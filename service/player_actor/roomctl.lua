@@ -4,7 +4,6 @@
 local skynet = require "skynet"
 local mc = require "skynet.multicast"
 local ROOM_MODEL = (require "models.room_model")
-require "service.player_actor"
 
 local M = {}
 

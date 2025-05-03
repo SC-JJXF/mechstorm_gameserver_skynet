@@ -1,4 +1,3 @@
-require "service.player_actor"
 
 local M = {}
 function M.handle_client_message(type, body)

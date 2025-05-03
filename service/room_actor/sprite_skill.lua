@@ -1,17 +1,14 @@
-
+--- 玩家的普攻也归 sprite_skill 处理
 local M = {}
 local bump = require "bump-3dpd"
 local players = Room_state.players
 local world = Room_state.world
 
-world = bump.newWorld()
 
 function M.on_open()
-    world = bump.newWorld()
 end
 
 function M.on_close()
-    world = nil
 end
 
 function M.on_player_enter(uid, player_sprite_info)
@@ -29,9 +26,9 @@ end
 function M.handle_player_event(uid, event)
 
     if event.type == "attack" then
-        return false
+        
     elseif event.type == "skill" then
-        return true
+        
     end
     
     -- 返回 false 代表继续传播这个事件

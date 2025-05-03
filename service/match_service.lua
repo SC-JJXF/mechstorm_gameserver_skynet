@@ -4,11 +4,8 @@ local s = require "service"
 local CMD = {}
 
 
-s.open = function()
-    s.CMD = CMD
-end
-
 s.close = function()
 end
 
+s.CMD = CMD
 s.start "match_server"

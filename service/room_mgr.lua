@@ -17,6 +17,7 @@ end
 function CMD.create_room(room_type, room_mapid)
     Log("创建新房间, 类型: " .. room_type .. ", 地图ID: " .. room_mapid)
     local room_id = skynet.newservice("room_actor", room_type, room_mapid)
+    skynet.call(room_id,"lua","open",room_type, room_mapid)
 
     active_rooms[room_id] = true -- 记录活跃房间
     Log("新房间 " .. room_id .. " 已创建")

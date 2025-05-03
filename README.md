@@ -14,8 +14,9 @@
 > 本项目在运行时需要与 https://github.com/SC-JJXF/mechstorm_usercenter 实例通信来实现对所有入站连接 鉴权、恢复/更新 玩家物品、机甲信息（还没做）等功能。   
 > 请将 `etc/config.lua`中的 usercenter_url 字段配置为该实例的 地址:端口（单服务器部署这两个的话默认的应该就能连上了）。
 
-#### 开发指南
+#### 开发Tips
 
+可以使用 Lua拓展 并启用 Lua拓展 中的 skynet addon 以获得更好的智能提示。
 
 
 #### Acknowledgements

@@ -17,6 +17,6 @@ skynet.start(function()
     skynet.uniqueservice("ws_server")
     -- skynet.manager.name(".ws_server", ws_server)
     skynet.uniqueservice("player_actor_locator")
-    
+    skynet.error("start ok")
     skynet.exit()
 end)

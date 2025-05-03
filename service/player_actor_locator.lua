@@ -64,11 +64,8 @@ function CMD.query(uid)
 end
 
 
-s.open = function()
-    s.CMD = CMD
-end
-
 s.close = function()
 end
 
+s.CMD = CMD
 s.start "player_actor_locator"
