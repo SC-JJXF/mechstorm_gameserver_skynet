@@ -98,5 +98,13 @@ change_room_to = function(new_room_id)
     return true
 end
 
+function M.on_open()
+    local lobby_id = query_lobby_room_id("Z战队营地")
+    change_room_to(lobby_id)
+end
+
+function M.on_close()
+    leave_current_room()
+end
 
 return M
