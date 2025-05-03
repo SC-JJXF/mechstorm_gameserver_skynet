@@ -149,6 +149,7 @@ end
 
 s.open = function(...)
     room_type, room_mapid = ...
+    s.name = "room "..room_type
     room_tx_to_players = mc.new()
 
     if room_type == room_model.ROOM_TYPE.PVP then
@@ -178,4 +179,4 @@ s.close = function()
 end
 
 s.CMD = CMD
-s.start("[room " .. room_type .. " ]")
+s.start ""

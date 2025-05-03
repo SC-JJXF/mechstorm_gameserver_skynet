@@ -92,7 +92,7 @@ change_room_to = function(new_room_id)
     room.type = connection_info.room_info and connection_info.room_info.type or "unknown"
     room.tx_to_players_chan = new_channel
 
-    Log("RoomModule: Entered room " .. room.id .. " of type '" .. room.type .. "'. 房间频道已 Subscribed.")
+    Log("RoomModule: Entered room " .. room.id .. " of type '" .. room.type .. "'. Room channel subscribed!")
 
     send_msg_to_client("room_update", connection_info.room_info)
     return true
