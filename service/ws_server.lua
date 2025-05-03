@@ -121,7 +121,7 @@ if MODE == "agent" then
                 connection_to_actor[id] = {state = "authenticated"}
 
                 skynet.error("Authentication successful for connection ", id, " UID:", user_info.uid)
-                
+
                 -- skynet.error("向 "..skynet.queryservice("player_actor_locator").." 查询...")
                 local existing_actor_addr = skynet.call(skynet.queryservice("player_actor_locator"), "lua", "query", user_info.uid)
                 -- skynet.error(existing_actor_addr)
@@ -132,9 +132,7 @@ if MODE == "agent" then
                 end
                 skynet.error("创建 player_actor ...")
                 connection_to_actor[id] = create_player_actor(id, user_info)
-                skynet.error(connection_to_actor[id])
-                local success_msg = { type = "auth_success" }
-                websocket.write(id, cjson.encode(success_msg))
+                skynet.error("创建 player_actor ... 完毕")
             else
                 skynet.error("Authentication failed for connection", id, "Error:", user_info)
                 send_error_and_close(id, user_info)
