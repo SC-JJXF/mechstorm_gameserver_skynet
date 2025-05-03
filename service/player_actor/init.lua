@@ -6,11 +6,11 @@ cs = (require "skynet.queue")()
 local RoomModule = require "roomctl"
 
 
-local f_send_msg_to_client, user_data
+local gateway_connection_info, user_data
 
 
 function send_msg_to_client(type, body)
-    f_send_msg_to_client(type, body)
+    skynet.send(gateway_connection_info.gatewayIP, "lua", "send", gateway_connection_info.fd, type, body)
 end
 
 local CMD = {}
@@ -43,8 +43,8 @@ end
 s.open = function(...)
     Log("启动")
 
-    f_send_msg_to_client, user_data = ...
-    Log(f_send_msg_to_client, user_data)
+    gateway_connection_info, user_data = ...
+    Log(gateway_connection_info, user_data)
     user_info                             = {
         uid = tonumber(user_data.uid),
         nickname = user_data.nickname

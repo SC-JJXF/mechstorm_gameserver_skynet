@@ -85,14 +85,11 @@ if MODE == "agent" then
     ---@return integer player_actor 的 skynet 服务地址
     local function create_player_actor(fd, user_info)
         local gatewayIP = skynet.self()
-        local function send_msg_to_client(type, body)
-            skynet.send(gatewayIP, "lua", "send", fd, type, body)
-        end
         -- skynet.error("newservice("player_actor")")
         local i =skynet.newservice("player_actor")
-        skynet.error("call open")
-        skynet.call(i,"lua" ,"open", send_msg_to_client , user_info)
-        skynet.error("create_player_actor...","ok")
+        -- skynet.error("call open")
+        skynet.call(i,"lua" ,"open", {gatewayIP=gatewayIP,fd=fd} , user_info)
+        -- skynet.error("create_player_actor...","ok")
         return i
     end
 
