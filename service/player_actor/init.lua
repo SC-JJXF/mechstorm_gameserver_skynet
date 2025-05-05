@@ -23,8 +23,11 @@ local function call_module_func(func_name, ...)
     end
 end
 
+---下发消息到客户端
+---@param type string 消息类型
+---@param body string|table 主体
 function send_msg_to_client(type, body)
-    skynet.send(gateway_connection_info.gatewayIP, "lua", "send", gateway_connection_info.fd, type, body)
+    skynet.send(gateway_connection_info.gatewayIP, "lua", "send", gateway_connection_info.fd, {type = type, body = body})
 end
 
 local CMD = {}
@@ -33,7 +36,7 @@ CMD.handle_client_message = function(message)
     local body = message.body
 
     if pa_modules[msg_type] then
-        cs(pa_modules[msg_type]["handle_client_message"](body.type, body.body))
+        cs(pa_modules[msg_type]["handle_client_message"], body.type, body.body)
     else
         Log("收到预期外的客户端消息 msg_type: " .. msg_type)
     end

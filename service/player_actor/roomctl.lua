@@ -22,7 +22,7 @@ end
 
 function M.handle_client_message(type, body)
     if type == "change_lobby_room" then
-        if room.type == "lobby" then
+        if room.type == ROOM_MODEL.ROOM_TYPE.LOBBY then
             cs(function(map_name)
                 local target_lobby_id = query_lobby_room_id(map_name)
                 if target_lobby_id then
@@ -89,7 +89,8 @@ change_room_to = function(new_room_id)
     new_channel:subscribe()
 
     room.id = new_room_id
-    room.type = connection_info.room_info and connection_info.room_info.type or "unknown"
+    assert(connection_info.room_info.type)
+    room.type = connection_info.room_info.type
     room.tx_to_players_chan = new_channel
 
     Log("RoomModule: Entered room " .. room.id .. " of type '" .. room.type .. "'. Room channel subscribed!")

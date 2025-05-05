@@ -123,7 +123,7 @@ if MODE == "agent" then
                 local existing_actor_addr = skynet.call(skynet.queryservice("player_actor_locator"), "lua", "query", user_info.uid)
                 -- skynet.error(existing_actor_addr)
                 if existing_actor_addr then
-                    Log("Login rejected for UID " .. user_info.uid .. ". Already active at " .. skynet.address(existing_actor_addr))
+                    skynet.error("Login rejected for UID " .. user_info.uid .. ". Already active at " .. skynet.address(existing_actor_addr))
                     send_error_and_close(id, "该用户正在本服务器中游戏，请在其他设备上退出游戏，或切换到其他服务器（如果有）")
                     return
                 end
@@ -194,17 +194,12 @@ if MODE == "agent" then
 
     --- 来自 player_actor 的消息会被下发到对应的客户端 (由 player_actor 调用)
     --- @param ws_id number WebSocket连接ID
-    --- @param msg_type string 消息类型
-    --- @param msg_body string|table 消息内容
-    function CMD.send(ws_id, msg_type, msg_body)
-        local message = {
-            type = msg_type,
-            body = msg_body -- cjson 会正确处理 table 或 string
-        }
-        local ok, json_str = pcall(cjson.encode, message)
+    --- @param msg string|table 消息
+    function CMD.send(ws_id, msg)
+        local ok, json_str = pcall(cjson.encode, msg)
         if not ok then
             -- 记录更详细的错误信息
-            skynet.error("Failed to encode message to JSON. Type:", msg_type, "Error:", json_str)
+            skynet.error("Failed to encode message to JSON. Error:", json_str)
             return
         end
         websocket.write(ws_id, json_str)

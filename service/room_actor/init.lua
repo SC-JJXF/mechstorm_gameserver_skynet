@@ -38,7 +38,7 @@ local function call_module_func(func_name, ...)
     for _, m in ipairs(roomfunc_modules) do
         if m[func_name] then
             result = m[func_name](...)
-            if result == true then  -- 如果函数返回true，则中断循环（用于handle_player_event）
+            if result == true then -- 如果函数返回true，则中断循环（用于handle_player_event）
                 return true
             end
         end
@@ -79,7 +79,6 @@ end
 
 --- 玩家加入房间 返回帮助玩家连接到房间频道的 connection_info
 function CMD.player_enter(uid, player_sprite_info)
-
     players[uid] = player(player_sprite_info)
     player_count = player_count + 1
     Log("玩家加入房间，当前玩家数量：" .. player_count)
@@ -94,18 +93,15 @@ end
 
 -- 玩家离开房间
 function CMD.player_leave(uid)
-
-
     player_count = player_count - 1
     players[uid] = nil
     call_module_func("on_player_leave", uid)
 
     Log("玩家离开房间，当前玩家数量：" .. player_count)
 
-    -- Check if room should be destroyed when empty (optional, depends on game logic)
     -- if player_count == 0 then
-    --     Log("房间为空，准备销毁...")
-    --     skynet.send(s.self(), "lua", "close") -- Example: trigger self-destruction
+    --     Log("没有玩家在该房间，自我销毁...")
+    --     skynet.send(s.ip, "lua", "close") -- Example: trigger self-destruction
     -- end
 end
 
@@ -129,7 +125,7 @@ end
 -- 内部函数：广播消息给房间内其他玩家
 local function frame_syncer()
     while true do
-        skynet.sleep(2)       -- 50fps左右
+        skynet.sleep(2) -- 50fps左右
 
         call_module_func("world_update")
         if player_count > 0 and room_tx_to_players then -- Check room_tx_to_players exists
@@ -149,11 +145,11 @@ end
 
 s.open = function(...)
     room_type, room_mapid = ...
-    s.name = "room "..room_type
+    s.name = "room " .. room_type
     room_tx_to_players = mc.new()
 
     if room_type == room_model.ROOM_TYPE.PVP then
-        table.insert(roomfunc_modules,(require "room_actor.sprite_skill"))
+        table.insert(roomfunc_modules, (require "room_actor.sprite_skill"))
     end
 
     call_module_func("on_open")
