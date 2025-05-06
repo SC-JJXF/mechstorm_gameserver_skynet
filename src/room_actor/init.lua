@@ -4,8 +4,8 @@ local s = require "service"
 local bump = require "bump-3dpd"
 
 
-local sprite_model = (require "models.sprite_model")
-local room_model = (require "models.room_model")
+local sprite_model = (require "models.sprite")
+local room_model = (require "models.room")
 
 local room_type, room_mapid
 

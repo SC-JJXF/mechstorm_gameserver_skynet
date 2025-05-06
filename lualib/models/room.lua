@@ -1,5 +1,6 @@
 local ROOM = {}
--- 房间类型定义
+
+--- 房间类型定义
 ROOM.ROOM_TYPE = {
     ---大厅
     LOBBY = 1,
@@ -7,6 +8,16 @@ ROOM.ROOM_TYPE = {
     PVP = 2,
     ---副本 DUNGEON
     PVE = 3
+}
+
+---如果房间类型为pvp，那么pvp的类型是
+ROOM.PVP_TYPE = {
+    ---单挑
+    P1V1 = 1,
+    ---乱斗
+    P1V1V1V1 = 2,
+    ---组队竞技
+    P2V2 = 3,
 }
 
 ROOM.MAP_NAME = {

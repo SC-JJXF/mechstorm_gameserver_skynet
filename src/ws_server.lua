@@ -111,7 +111,7 @@ if MODE == "agent" then
 
             ---@type string
             local token = data.token
-            local ok, user_info = skynet.call(skynet.queryservice("usercenter_service"), "lua", "verify_token", token)
+            local ok, user_info = skynet.call(skynet.queryservice("usercenter"), "lua", "verify_token", token)
             
             if ok then
                 ---@type table
@@ -124,7 +124,7 @@ if MODE == "agent" then
                 -- skynet.error(existing_actor_addr)
                 if existing_actor_addr then
                     skynet.error("Login rejected for UID " .. user_info.uid .. ". Already active at " .. skynet.address(existing_actor_addr))
-                    send_error_and_close(id, "该用户正在本服务器中游戏，请在其他设备上退出游戏，或切换到其他服务器（如果有）")
+                    send_error_and_close(id, "该用户正在本服务器中游戏，请先在其他设备上退出游戏，或切换到其他服务器（如果有）")
                     return
                 end
                 skynet.error("创建 player_actor ...")

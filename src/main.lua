@@ -10,8 +10,8 @@ skynet.start(function()
     -- skynet.manager.name(".room_mgr", room_mgr)
 
     -- 启动用户中心服务
-    skynet.uniqueservice("usercenter_service")
-    -- skynet.manager.name(".usercenter_service", usercenter_service)
+    skynet.uniqueservice("usercenter")
+    -- skynet.manager.name(".usercenter", usercenter)
 
     -- 启动WebSocket服务
     skynet.uniqueservice("ws_server")

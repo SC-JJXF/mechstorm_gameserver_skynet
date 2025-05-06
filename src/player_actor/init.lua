@@ -5,7 +5,10 @@ local cjson = require "cjson"
 cs = (require "skynet.queue")()
 
 -- pa , player_actor 缩写
-local pa_modules = {roomctl = require "roomctl"}
+local pa_modules = {
+    roomctl = require "roomctl",
+    matchctl = require "matchctl"
+}
 
 
 local gateway_connection_info, user_data
@@ -27,11 +30,10 @@ end
 ---@param type string 消息类型
 ---@param body string|table 主体
 function send_msg_to_client(type, body)
-    skynet.send(gateway_connection_info.gatewayIP, "lua", "send", gateway_connection_info.fd, {type = type, body = body})
+    SendToActor(gateway_connection_info.gatewayIP, "send", gateway_connection_info.fd, { type = type, body = body })
 end
 
-local CMD = {}
-CMD.handle_client_message = function(message)
+s.CMD.handle_client_message = function(message)
     local msg_type = message.type
     local body = message.body
 
@@ -42,11 +44,20 @@ CMD.handle_client_message = function(message)
     end
 end
 
-CMD.client_disconnected = function()
+s.CMD.client_disconnected = function()
     -- 玩家下线/掉线，通知自己的 service 层销毁本服务
-    skynet.send(skynet.self(),"lua", "close")
+    skynet.send(skynet.self(), "lua", "close")
 end
 
+--- 注册模块们提供的消息处理函数
+--- 感谢 huahua132 的文章！
+for _, m in pairs(pa_modules) do
+    local register_cmd = m.CMD
+    for cmdname,func in pairs(register_cmd) do
+		assert(not s.CMD[cmdname], "exists cmdname: " .. cmdname)
+		s.CMD[cmdname] = func
+	end
+end
 
 local hello = function()
     call_module_func("on_open")
@@ -56,18 +67,18 @@ s.open = function(...)
     Log("启动")
 
     gateway_connection_info, user_data = ...
-    user_info                             = {
+    user_info                          = {
         uid = tonumber(user_data.uid),
         nickname = user_data.nickname
     }
-    sprite_info                           = {
+    sprite_info                        = {
         nickname = user_data.nickname,
         --- theme指明是哪个机甲
         theme = "default",
         max_HP = 56000
     }
-    s.name = "player " .. user_info.uid
-    skynet.call(skynet.queryservice("player_actor_locator"), "lua", "register", user_info.uid, s.ip)
+    s.name                             = "player " .. user_info.uid
+    CallUniService("player_actor_locator", "register", user_info.uid, s.ip)
     skynet.fork(hello)
     -- 在此处加载角色数据 (占位符)
     -- skynet.sleep(200)
@@ -75,12 +86,9 @@ end
 
 s.close = function()
     call_module_func("on_close")
-
-    skynet.call(skynet.queryservice("player_actor_locator"), "lua", "unregister", user_info.uid, s.ip)
-
+    CallUniService("player_actor_locator", "unregister", user_info.uid, s.ip)
     -- 在此处保存角色数据 (占位符)
     -- skynet.sleep(200)
 end
 
-s.CMD = CMD
 s.start("player")

@@ -81,7 +81,15 @@ end
 function Log(err)
     skynet.error("[" .. M.name .. "] " .. tostring(err))
 end
-
+function CallUniService(servicename,...)
+    return skynet.call(skynet.queryservice(servicename),"lua",...)
+end
+function CallActor(actorip,...)
+    return skynet.call(actorip,"lua",...)
+end
+function SendToActor(actorip,...)
+    return skynet.send(actorip,"lua",...)
+end
 function Traceback(err)
     Log(err)
     skynet.error(debug.traceback())

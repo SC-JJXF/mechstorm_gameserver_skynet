@@ -3,7 +3,7 @@
 ---@diagnostic disable: need-check-nil
 local skynet = require "skynet"
 local mc = require "skynet.multicast"
-local ROOM_MODEL = (require "models.room_model")
+local ROOM_MODEL = (require "models.room")
 
 local M = {}
 

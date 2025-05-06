@@ -5,7 +5,7 @@ local rooms = {} -- 追踪所有房间
 local lobby_mapid_room = {} -- 追踪每个地图的大厅房间 { [mapid] = room_id }
 
 local CMD = {}
-local ROOM_MODEL = (require "models.room_model")
+local ROOM_MODEL = (require "models.room")
 
 
 --- 创建新房间
@@ -47,7 +47,7 @@ function CMD.get_lobby_room(map_id)
     end
 end
 
---- 房间服务通知管理器它已销毁
+--- 房间actor通知管理器它已销毁
 ---@param room_id integer
 function CMD.room_destroyed(room_id)
     if not rooms[room_id] then
