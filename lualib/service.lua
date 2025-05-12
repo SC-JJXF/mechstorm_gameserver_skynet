@@ -90,6 +90,13 @@ end
 function SendToActor(actorip,...)
     return skynet.send(actorip,"lua",...)
 end
+function CallPlayer(uid,...)
+    local uip = CallUniService("player_actor_locator", "query", uid)
+    if not uip then
+        return false, "目标玩家不在线"
+    end
+    return skynet.call(uip,"lua",...)
+end
 function Traceback(err)
     Log(err)
     skynet.error(debug.traceback())

@@ -14,10 +14,14 @@
 > 本项目在运行时需要与 https://github.com/SC-JJXF/mechstorm_usercenter 实例通信来实现对所有入站连接 鉴权、恢复/更新 玩家物品、机甲信息（还没做）等功能。   
 > 请将 `etc/config.lua`中的 usercenter_url 字段配置为该实例的 地址:端口（单服务器部署这两个的话默认的应该就能连上了）。
 
-#### 开发 Tips
+#### Tips
 
-可以使用 Lua拓展 并启用 Lua拓展 中的 skynet addon 以获得更好的智能提示。
+Lua 新手（例如作者）可以使用 Lua LSP拓展 来避免写 lua 时出现的常见错误！
 
+~~ 可以使用 sumneko的Lua拓展 并启用 拓展 中的 skynet addon 以获得更好的智能提示。~~
+
+sumneko的Lua拓展 太慢了，建议换用 EmmyLua     
+vscode 打开此仓库右下角会自动推荐安装 EmmyLua，点安装即可
 
 #### 特别鸣谢 Acknowledgements
 

@@ -2,7 +2,7 @@ local skynet = require "skynet"
 local socket = require "skynet.socket"
 local websocket = require "http.websocket"
 local cjson = require "cjson"
-cjson.encode_sparse_array(true)
+cjson.encode_sparse_array(true, 1, 0)  -- 启用稀疏数组优化，安全等级1，n=0表示不保留null
 
 local MODE = ...
 

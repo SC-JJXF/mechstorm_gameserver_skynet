@@ -16,8 +16,10 @@ local room = {
 }
 
 local function query_lobby_room_id(lobby_map_name)
-    return skynet.call(skynet.queryservice("room_mgr"), "lua", "get_lobby_room",
-        ROOM_MODEL.MAP_NAME.hall[lobby_map_name])
+    if not ROOM_MODEL.MAP_NAME.hall[lobby_map_name] then
+        return nil
+    end
+    return CallUniService("room_mgr","get_lobby_room", ROOM_MODEL.MAP_NAME.hall[lobby_map_name])
 end
 
 function M.handle_client_message(type, body)
@@ -29,12 +31,12 @@ function M.handle_client_message(type, body)
                     change_room_to(target_lobby_id)
                 else
                     Log("无法找到大厅房间: " .. map_name)
-                    send_msg_to_client("msg", { message = "目标地图不存在: " .. map_name, sender = "system" })
+                    SendToClient("msg", { message = "目标地图不存在: " .. map_name, sender = "system" })
                 end
             end, body.map_name)
         else
             Log("收到 'change_lobby_room' 消息但现在不在大厅中。当前房间类型: " .. (room.type or "无"))
-            send_msg_to_client("msg", { message = "请先离开当前游戏房间。", sender = "system" })
+            SendToClient("msg", { message = "请先离开当前游戏房间。", sender = "system" })
         end
         return
     else
@@ -44,12 +46,12 @@ end
 
 rx_from_room = function(channel, source, msg)
     if msg.type == "frame_sync" then
-        send_msg_to_client("frame_sync", msg.body)
+        SendToClient("frame_sync", msg.body)
     elseif msg.type == "room_destroyed" then
         Log("RoomModule: Current room " .. (room.id or "unknown") .. " destroyed, returning to lobby.")
         local lobby_id = query_lobby_room_id("Z战队营地")
         change_room_to(lobby_id)
-        send_msg_to_client("msg", { message = "当前房间已关闭，您已被送回大厅。", sender = "system" })
+        SendToClient("msg", { message = "当前房间已关闭，您已被送回大厅。", sender = "system" })
     end
 end
 
@@ -72,7 +74,7 @@ leave_current_room = function()
     end
     room.id = nil
     room.type = nil
-    Log("RoomModule: Left room. State cleared.")
+    -- Log("RoomModule: Left room. State cleared.")
 end
 
 change_room_to = function(new_room_id)
@@ -81,7 +83,7 @@ change_room_to = function(new_room_id)
     Log("RoomModule: Attempting to enter room " .. new_room_id)
 
     local connection_info = skynet.call(new_room_id, "lua", "player_enter", user_info.uid, sprite_info)
-    Log("RoomModule: Successfully entered room. 连接至下发的房间频道")
+    -- Log("RoomModule: Successfully entered room. 连接至下发的房间频道")
     local new_channel = mc.new {
         channel = connection_info.room_tx_channel_id,
         dispatch = rx_from_room,
@@ -93,9 +95,9 @@ change_room_to = function(new_room_id)
     room.type = connection_info.room_info.type
     room.tx_to_players_chan = new_channel
 
-    Log("RoomModule: Entered room " .. room.id .. " of type '" .. room.type .. "'. Room channel subscribed!")
+    -- Log("RoomModule: Entered room " .. room.id .. " of type '" .. room.type .. "'. Room channel subscribed!")
 
-    send_msg_to_client("room_update", connection_info.room_info)
+    SendToClient("room_update", connection_info.room_info)
     return true
 end
 

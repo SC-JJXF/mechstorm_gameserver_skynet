@@ -1,7 +1,6 @@
 local skynet = require "skynet"
 local mc = require "skynet.multicast"
 local s = require "service"
-local bump = require "bump-3dpd"
 
 
 local sprite_model = (require "models.sprite")
@@ -10,6 +9,17 @@ local room_model = (require "models.room")
 local room_type, room_mapid
 
 local player_count = 0
+
+---@class Player
+---@field uid integer
+---@field nickname string
+---@field theme string
+---@field HP integer
+---@field sprite {position: {x:number, y:number, z:number, is_facing_left:boolean}, debuff: integer, debuff_starttime: number}
+---@field group integer
+---@field DeductHP fun(self: Player, reduceHP: integer)
+
+---@type table<integer, Player>
 local players = {}
 
 
@@ -21,19 +31,11 @@ local players = {}
 local frame_events = {}
 
 
--- Shared state accessible by the roomfunc_modules
-Room_state = {
-    players = players,
-    room_type = room_type,
-    mapid = room_mapid,
-    world = bump.newWorld()
-}
-
-local room_tx_to_players = nil
+-- room_tx_to_players = nil
 local roomfunc_modules = {} -- 在 s.open 处加载
 
 -- 高阶函数：用于调用所有模块中的特定方法
-local function call_module_func(func_name, ...)
+function call_module_func(func_name, ...)
     local result = nil
     for _, m in ipairs(roomfunc_modules) do
         if m[func_name] then
@@ -48,8 +50,35 @@ end
 
 local CMD = {}
 
-local function player(player_sprite_info)
-    return {
+-- Shared state accessible by the roomfunc_modules
+Room_state = {
+    players = players,
+    room_type = room_type,
+    mapid = room_mapid,
+    world = nil,
+    s = s,
+    ---@type "ended" | "running"
+    game_state = "running"
+}
+
+local player_metatable = {
+    __index = {
+        DeductHP = function(self, reduceHP)
+            self.HP = self.HP - reduceHP
+            if self.HP < 0 then
+                self.HP = 0
+            end
+            if self.HP == 0 then
+                call_module_func("on_player_die", self.uid)
+            end
+        end
+    }
+}
+
+---@return Player
+local function player(uid, player_sprite_info)
+    local i = {
+        uid = uid,
         nickname = player_sprite_info.nickname,
         theme = player_sprite_info.theme,
         HP = player_sprite_info.max_HP,
@@ -64,8 +93,15 @@ local function player(player_sprite_info)
             --- 角色受到的击飞晕眩之类的效果
             debuff = sprite_model.debuff_type.none,
             debuff_starttime = 0 --前端计算动画用
-        }
+        },
+        -- 相同 group 的玩家互为队友，编号从0开始
+        group = 0,
+        -- -- player_additional_info
+        -- pai = {
+
+        -- }
     }
+    return setmetatable(i, player_metatable)
 end
 
 -- 获取房间状态
@@ -79,7 +115,7 @@ end
 
 --- 玩家加入房间 返回帮助玩家连接到房间频道的 connection_info
 function CMD.player_enter(uid, player_sprite_info)
-    players[uid] = player(player_sprite_info)
+    players[uid] = player(uid, player_sprite_info)
     player_count = player_count + 1
     Log("玩家加入房间，当前玩家数量：" .. player_count)
     call_module_func("on_player_enter", uid, player_sprite_info)
@@ -93,53 +129,76 @@ end
 
 -- 玩家离开房间
 function CMD.player_leave(uid)
+    call_module_func("on_player_leave", uid)
     player_count = player_count - 1
     players[uid] = nil
-    call_module_func("on_player_leave", uid)
 
     Log("玩家离开房间，当前玩家数量：" .. player_count)
 
-    -- if player_count == 0 then
-    --     Log("没有玩家在该房间，自我销毁...")
-    --     skynet.send(s.ip, "lua", "close") -- Example: trigger self-destruction
-    -- end
+    if player_count == 0 and not room_type == room_model.ROOM_TYPE.LOBBY then
+        Log("房间无人，自我销毁...")
+        skynet.send(s.ip, "lua", "close") 
+    end
 end
 
 --- 玩家：位置更新
 --- @param uid integer 玩家uid
 --- @param position table 玩家位置信息
 function CMD.player_position_update(uid, position)
+    if players[uid].HP == 0 then
+        return
+    end
     call_module_func("on_player_position_update", uid, position)
     -- Log("玩家位置更新：" .. uid .. " -> " .. cjson.encode(position))
     players[uid]["sprite"]["position"] = position
+end
+
+--- 玩家：收到debuff（由玩家本身更新）
+--- @param uid integer 玩家uid
+--- @param debuffname string 玩家位置信息
+function CMD.player_get_debuff(uid, debuffname)
+    if players[uid].HP == 0 and not debuffname == "die" then
+        return
+    end
+    if sprite_model.debuff_type[debuffname] == nil then
+        return
+    end
+    call_module_func("on_player_get_debuff", uid, debuffname)
+    players[uid]["sprite"].debuff = sprite_model.debuff_type[debuffname]
+    players[uid]["sprite"].debuff_starttime = skynet.now()
 end
 
 --- 玩家：事件添加
 --- @param uid integer 玩家uid
 --- @param event table 玩家事件信息
 function CMD.player_event_add(uid, event)
-    local event_handled = call_module_func("handle_player_event", uid, event)
+    --- TODO: 将聊天系统从房间模块拆分出去后，屏蔽hp为0的玩家发送的事件
+    local event_handled = call_module_func("handle_player_event", uid, event.type, event.body)
     table.insert(frame_events, { uid = uid, type = event.type, body = event.body })
+end
+
+function handle_module_message(type, body)
+    call_module_func("handle_module_message", type, body)
 end
 
 -- 内部函数：广播消息给房间内其他玩家
 local function frame_syncer()
     while true do
         skynet.sleep(2) -- 50fps左右
+        if Room_state.game_state == "running" then
+            call_module_func("world_update")
+            if player_count > 0 and room_tx_to_players then -- Check room_tx_to_players exists
+                local frame_buffer = {
+                    in_room_players = Room_state.players,
+                    events = frame_events,
+                    timestamp = skynet.now(),
+                }
 
-        call_module_func("world_update")
-        if player_count > 0 and room_tx_to_players then -- Check room_tx_to_players exists
-            local frame_buffer = {
-                in_room_players = Room_state.players,
-                events = frame_events,
-                timestamp = skynet.now(),
-            }
+                room_tx_to_players:publish({ type = "frame_sync", body = frame_buffer })
 
-            room_tx_to_players:publish({ type = "frame_sync", body = frame_buffer })
-
-            frame_events = {} -- Clear events after sending
+                frame_events = {} -- Clear events after sending
+            end
         end
-        -- If player_count <= 0, the loop continues, waiting for players
     end
 end
 
@@ -150,6 +209,16 @@ s.open = function(...)
 
     if room_type == room_model.ROOM_TYPE.PVP then
         table.insert(roomfunc_modules, (require "room_actor.sprite_skill"))
+    end
+
+    --- 注册模块们提供的消息处理函数
+    --- 感谢 huahua132 的文章！
+    for _, m in pairs(roomfunc_modules) do
+        local register_cmd = m.CMD
+        for cmdname, func in pairs(register_cmd) do
+            assert(not s.CMD[cmdname], "exists cmdname: " .. cmdname)
+            s.CMD[cmdname] = func
+        end
     end
 
     call_module_func("on_open")

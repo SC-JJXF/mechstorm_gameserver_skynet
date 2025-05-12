@@ -1,8 +1,13 @@
+---@diagnostic disable: unnecessary-assert
+
 --- 玩家的普攻也归 sprite_skill 处理
+
+---@package
 local M = {}
 local bump = require "bump-3dpd"
 local players = Room_state.players
 local world = Room_state.world
+world = bump.newWorld()
 
 
 function M.on_open()

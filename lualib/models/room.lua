@@ -26,6 +26,29 @@ ROOM.MAP_NAME = {
         ["特训平台"] = 2,
         ["俱乐部"] = 3
     },
+    pvp = {
+        ["P1V1"] = 4,
+        ["P1V1V1V1"] = 5,
+        ["P2V2"] = 6,
+    }   
 }
+
+--- 根据PVP类型获取地图ID
+-- @param pvpType PVP类型值(ROOM.PVP_TYPE中的值)
+-- @return 地图ID, 如果找不到返回nil
+function ROOM.getMapId(pvpType)
+    -- 查找PVP类型名称
+    local pvpName
+    for name, id in pairs(ROOM.PVP_TYPE) do
+        if id == pvpType then
+            pvpName = name
+            break
+        end
+    end
+    assert(pvpName)
+    
+    -- 查找地图ID
+    return ROOM.MAP_NAME.pvp[pvpName]
+end
 
 return ROOM

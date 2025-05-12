@@ -29,7 +29,7 @@ end
 ---下发消息到客户端
 ---@param type string 消息类型
 ---@param body string|table 主体
-function send_msg_to_client(type, body)
+function SendToClient(type, body)
     SendToActor(gateway_connection_info.gatewayIP, "send", gateway_connection_info.fd, { type = type, body = body })
 end
 
@@ -53,7 +53,7 @@ end
 --- 感谢 huahua132 的文章！
 for _, m in pairs(pa_modules) do
     local register_cmd = m.CMD
-    for cmdname,func in pairs(register_cmd) do
+    for cmdname,func in pairs(register_cmd or {}) do
 		assert(not s.CMD[cmdname], "exists cmdname: " .. cmdname)
 		s.CMD[cmdname] = func
 	end

@@ -6,6 +6,7 @@ Sprite.debuff_type = {
     stun = 3,           -- 晕眩效果
     slow = 4,           -- 减速效果
     freeze = 5,         -- 冻结效果
+    die = 6
 }
 
 

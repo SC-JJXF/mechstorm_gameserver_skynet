@@ -1,0 +1,10 @@
+rock_manifest = {
+   doc = {
+      LICENSE = "4f9dd157d0542c250165053c13bdcbf7",
+      ["README.md"] = "4005f6ac7c4cd23cd78102decf8c265c"
+   },
+   lua = {
+      ["statemachine.lua"] = "67e677839a8a0ac22f48e0cc2e04aba5"
+   },
+   ["statemachine-1.0.0-1.rockspec"] = "e6ed222108cb550ea2ff8bb0ce818d66"
+}
