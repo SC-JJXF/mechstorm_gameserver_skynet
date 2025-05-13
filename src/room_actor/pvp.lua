@@ -108,3 +108,4 @@ function M.CMD.pvp_init(roomPlayers, PVP_TYPE)
     end
     inited = true
 end
+return M

@@ -4,14 +4,22 @@ local s = require "service"
 local cjson = require "cjson"
 cs = (require "skynet.queue")()
 
+
+local gateway_connection_info, user_data
+
+---下发消息到客户端
+---@param type string 消息类型
+---@param body string|table 主体
+function SendToClient(type, body)
+    SendToActor(gateway_connection_info.gatewayIP, "send", gateway_connection_info.fd, { type = type, body = body })
+end
+
+
 -- pa , player_actor 缩写
 local pa_modules = {
     roomctl = require "roomctl",
     matchctl = require "matchctl"
 }
-
-
-local gateway_connection_info, user_data
 
 -- 高阶函数：用于调用所有模块中的特定方法
 local function call_module_func(func_name, ...)
@@ -24,13 +32,6 @@ local function call_module_func(func_name, ...)
             -- end
         end
     end
-end
-
----下发消息到客户端
----@param type string 消息类型
----@param body string|table 主体
-function SendToClient(type, body)
-    SendToActor(gateway_connection_info.gatewayIP, "send", gateway_connection_info.fd, { type = type, body = body })
 end
 
 s.CMD.handle_client_message = function(message)

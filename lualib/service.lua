@@ -84,6 +84,9 @@ end
 function CallUniService(servicename,...)
     return skynet.call(skynet.queryservice(servicename),"lua",...)
 end
+function SendToUniService(servicename,...)
+    return skynet.send(skynet.queryservice(servicename),"lua",...)
+end
 function CallActor(actorip,...)
     return skynet.call(actorip,"lua",...)
 end
@@ -96,6 +99,13 @@ function CallPlayer(uid,...)
         return false, "目标玩家不在线"
     end
     return skynet.call(uip,"lua",...)
+end
+function SendToPlayer(uid,...)
+    local uip = CallUniService("player_actor_locator", "query", uid)
+    if not uip then
+        return false, "目标玩家不在线"
+    end
+    return skynet.send(uip,"lua",...)
 end
 function Traceback(err)
     Log(err)

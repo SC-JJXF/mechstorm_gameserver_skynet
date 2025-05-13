@@ -59,7 +59,7 @@ end
 function CMD.query(uid)
     uid = tonumber(uid)
     local addr = players[uid]
-    Log("查询 UID " .. uid .. " -> " .. (addr and skynet.address(addr) or "未找到"))
+    -- Log("查询 UID " .. uid .. " -> " .. (addr and skynet.address(addr) or "未找到"))
     return addr
 end
 

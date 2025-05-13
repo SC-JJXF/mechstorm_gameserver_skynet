@@ -38,9 +38,14 @@ local roomfunc_modules = {} -- 在 s.open 处加载
 function call_module_func(func_name, ...)
     local result = nil
     for _, m in ipairs(roomfunc_modules) do
-        if m[func_name] then
+        -- -- 添加模块有效性检查
+        -- if type(m) ~= "table" then
+        --     skynet.error("Invalid module type:", type(m))
+        --     error("Attempt to call function on invalid module")
+        -- end
+        if m[func_name] and type(m[func_name]) == "function" then
             result = m[func_name](...)
-            if result == true then -- 如果函数返回true，则中断循环（用于handle_player_event）
+            if result == true then
                 return true
             end
         end
@@ -134,8 +139,8 @@ function CMD.player_leave(uid)
     players[uid] = nil
 
     Log("玩家离开房间，当前玩家数量：" .. player_count)
-
-    if player_count == 0 and not room_type == room_model.ROOM_TYPE.LOBBY then
+    Log(player_count..room_type )
+    if player_count == 0 and room_type ~= room_model.ROOM_TYPE.LOBBY then
         Log("房间无人，自我销毁...")
         skynet.send(s.ip, "lua", "close") 
     end
@@ -207,15 +212,31 @@ s.open = function(...)
     s.name = "room " .. room_type
     room_tx_to_players = mc.new()
 
+    -- 加载房间类型对应的模块
     if room_type == room_model.ROOM_TYPE.PVP then
-        table.insert(roomfunc_modules, (require "room_actor.sprite_skill"))
+        -- local pvp, err = require("pvp")
+        -- if not pvp or type(pvp) ~= "table" then
+        --     skynet.error("PVP模块加载失败:", err or "未知错误")
+        --     error("PVP模块加载失败: " .. tostring(err or "模块未正确导出"))
+        -- end
+        
+        -- if not pvp.CMD or type(pvp.CMD) ~= "table" then
+        --     skynet.error("PVP模块缺少CMD表")
+        --     error("PVP模块结构不完整：缺少CMD表")
+        -- end
+        
+        -- if not pvp.CMD.pvp_init or type(pvp.CMD.pvp_init) ~= "function" then
+        --     skynet.error("PVP模块缺少初始化函数")
+        --     error("PVP模块缺少必要的pvp_init函数")
+        -- end
+        table.insert(roomfunc_modules, require("pvp"))
     end
 
     --- 注册模块们提供的消息处理函数
     --- 感谢 huahua132 的文章！
     for _, m in pairs(roomfunc_modules) do
         local register_cmd = m.CMD
-        for cmdname, func in pairs(register_cmd) do
+        for cmdname, func in pairs(register_cmd or {}) do
             assert(not s.CMD[cmdname], "exists cmdname: " .. cmdname)
             s.CMD[cmdname] = func
         end

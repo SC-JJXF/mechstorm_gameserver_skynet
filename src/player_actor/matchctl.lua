@@ -1,6 +1,7 @@
-local SendToClient1 = SendToClient
-local SendToClient = function (type, body)
-    SendToClient1("matchctl",{type = type,body = body}) 
+local SendToClient_Original = _G.SendToClient  -- 先声明变量
+
+local function SendToClient(type, body)
+    SendToClient_Original("matchctl", {type = type, body = body})
 end
 
 local s = require "service"
@@ -46,12 +47,13 @@ local matchstate = sm.create({
 
     },
     callbacks = {
-        onenterNONE = function(self, event, from, to)
+        onafterNONE = function(self, event, from, to)
             current_challenger_uid = nil
             current_opponent_uid = nil
             current_matching_mode = nil
         end,
         onbeforematch_random = function(self, event, from, to, PVP_TYPE)
+            -- Log("onbeforematch_random" .. PVP_TYPE)
             current_matching_mode = PVP_TYPE
             local ok, err = CallUniService("match", "i_want_match", user_info.uid, current_matching_mode)
             if not ok then
@@ -60,19 +62,19 @@ local matchstate = sm.create({
             return ok
         end,
         oncancel_match_random = function(self, event, from, to)
-            CallUniService("match", "cancel_match", user_info.uid,current_matching_mode) -- PVP_TYPE is not strictly needed here by match service for now
+            SendToUniService("match", "cancel_match", user_info.uid,current_matching_mode) -- PVP_TYPE is not strictly needed here by match service for now
         end,
         onbeforechallenge_player = function(self, event, from, to, opponent_uid)
             current_opponent_uid = opponent_uid -- 记录对手
             local ok, err = CallPlayer(current_opponent_uid, "handle_challenge_request", user_info.uid)
             if not ok then
                 Log(string.format("Player %s: i_want_p1v1_with %s failed: %s", user_info.uid, opponent_uid, err))
-                SendToClient("msg", { message = "挑战请求发送失败：" .. err, sender = "system" })
+                SendToClient_Original("pop-up-message", { message = "挑战请求发送失败：" .. err, status = "warning"})
             end
             return ok
         end,
         onopponent_rejected_challenge = function(self, event, from, to, reason)
-            SendToClient("msg", { message = "挑战请求被拒绝：" .. reason, sender = "system" })
+            SendToClient_Original("pop-up-message", { message = "挑战请求被拒绝：" .. reason, status = "info" })
         end,
         onbeing_challenged = function(self, event, from, to, challenger_uid_in)
             current_challenger_uid = challenger_uid_in
@@ -80,13 +82,13 @@ local matchstate = sm.create({
             SendToClient("being_challenged", {challenger_uid = challenger_uid_in})
         end,
         onreject_incoming_challenge = function(self, event, from, to, reason)
-            CallPlayer(current_opponent_uid, "handle_rejected_my_challenge",reason)
+            SendToPlayer(current_opponent_uid, "handle_rejected_my_challenge",reason)
         end,
         onaccept_incoming_challenge = function(self, event, from, to)
-            CallUniService("match", "we_accept_challenge",  user_info.uid, current_challenger_uid)
+            SendToUniService("match", "we_accept_challenge",  user_info.uid, current_challenger_uid)
         end,
-        onenterroom_ready = function(self, event, from, to, room_ip)
-            CallActor(s.ip,"go_to_room",room_ip)
+        onroom_ready = function(self, event, from, to, room_ip)
+            SendToActor(s.ip,"go_to_room",room_ip)
         end,
         onstatechange = function(self, event, from, to, ...)
             Log(string.format("Player %s: state %s -> %s by event %s", user_info.uid, from, to, event))
@@ -132,6 +134,7 @@ function M.CMD.handle_rejected_my_challenge(reason)
     matchstate:opponent_rejected_challenge(reason)
 end
 function M.CMD.handle_pvp_room_ready(room_ip)
+    Log(matchstate.current)
     matchstate:room_ready(room_ip)
 end
 function M.on_close()

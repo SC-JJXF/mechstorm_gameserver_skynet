@@ -57,7 +57,7 @@ end
 
 tx_to_room = function(type, body)
     if not room.id then
-        Log("RoomModule: tx_to_room called but not in a room. Type: " .. type)
+        -- Log("RoomModule: tx_to_room called but not in a room. Type: " .. type)
         return
     end
     skynet.send(room.id, "lua", "player_" .. type, user_info.uid, body)
@@ -105,7 +105,10 @@ function M.on_open()
     local lobby_id = query_lobby_room_id("Z战队营地")
     change_room_to(lobby_id)
 end
+
+M.CMD = {}
 function M.CMD.go_to_room(room_id)
+    Log("go_to_room"..room_id)
     change_room_to(room_id)
 end
 function M.on_close()
