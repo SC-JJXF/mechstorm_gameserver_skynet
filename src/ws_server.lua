@@ -127,9 +127,9 @@ if MODE == "agent" then
                     send_error_and_close(id, "该用户正在本服务器中游戏，请先在其他设备上退出游戏，或切换到其他服务器（如果有）")
                     return
                 end
-                skynet.error("创建 player_actor ...")
+                -- skynet.error("创建 player_actor ...")
                 connection_to_actor[id] = create_player_actor(id, user_info)
-                skynet.error("创建 player_actor ... 完毕")
+                -- skynet.error("创建 player_actor ... 完毕")
             else
                 skynet.error("Authentication failed for connection", id, "Error:", user_info)
                 send_error_and_close(id, user_info)

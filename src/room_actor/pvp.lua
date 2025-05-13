@@ -85,6 +85,8 @@ function M.on_player_die(uid)
 end
 
 M.CMD = {}
+
+---三个pvp模式模式共享同一套逻辑
 ---@param roomPlayers integer[]
 ---@param PVP_TYPE integer
 function M.CMD.pvp_init(roomPlayers, PVP_TYPE)

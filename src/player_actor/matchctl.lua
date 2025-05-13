@@ -134,7 +134,7 @@ function M.CMD.handle_rejected_my_challenge(reason)
     matchstate:opponent_rejected_challenge(reason)
 end
 function M.CMD.handle_pvp_room_ready(room_ip)
-    Log(matchstate.current)
+    -- Log(matchstate.current)
     matchstate:room_ready(room_ip)
 end
 function M.on_close()

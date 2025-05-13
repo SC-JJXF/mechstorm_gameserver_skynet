@@ -46,7 +46,7 @@ function CMD.get_lobby_room(map_id)
     assert(map_id)
     local room_id = lobby_mapid_roomip[map_id]
     if room_id then -- 检查房间是否存在且活跃
-        Log("找到地图为 " .. map_id .. " 的大厅房间: " .. room_id)
+        -- Log("找到地图为 " .. map_id .. " 的大厅房间: " .. room_id)
         return room_id
     else
         Log("未找到地图为 " .. map_id .. " 的大厅房间，创建一个")
