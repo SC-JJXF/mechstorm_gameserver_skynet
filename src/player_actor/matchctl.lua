@@ -31,21 +31,19 @@ local matchstate = sm.create({
         -- 随机匹配流程
         { name = 'match_random', from = S.NONE, to = S.MATCHING_RANDOM },
         { name = 'cancel_match_random', from = S.MATCHING_RANDOM, to = S.NONE },
-        { name = 'room_ready', from = S.MATCHING_RANDOM, to = S.ROOM_READY },
+        { name = 'room_ready', from = S.MATCHING_RANDOM, to = S.NONE },
 
         -- 发起挑战流程
         { name = 'challenge_player', from = S.NONE, to = S.CHALLENGING_WAIT_ACK },
         { name = 'opponent_rejected_challenge', from = S.CHALLENGING_WAIT_ACK, to = S.NONE }, -- 对方拒绝
-        { name = 'room_ready', from = S.CHALLENGING_WAIT_ACK, to = S.ROOM_READY }, -- 对方接受
+        { name = 'room_ready', from = S.CHALLENGING_WAIT_ACK, to = S.NONE }, -- 对方接受
 
         -- 被挑战流程
         { name = 'being_challenged', from = S.NONE, to = S.CHALLENGED_WAIT_MY_ACK },
         { name = 'reject_incoming_challenge', from = S.CHALLENGED_WAIT_MY_ACK, to = S.NONE }, -- 我方拒绝
         { name = 'accept_incoming_challenge', from = S.CHALLENGED_WAIT_MY_ACK, to = S.CHALLENGE_ACCEPTED_WAIT_ROOM }, -- 我方接受
-        { name = 'room_ready', from = S.CHALLENGE_ACCEPTED_WAIT_ROOM, to = S.ROOM_READY }, -- 房间就绪(我接受挑战后)
+        { name = 'room_ready', from = S.CHALLENGE_ACCEPTED_WAIT_ROOM, to = S.NONE }, -- 房间就绪(我接受挑战后)
 
-        -- 进入房间
-        { name = 'enter_room_confirm', from = S.ROOM_READY, to = S.NONE },
     },
     callbacks = {
         onenterNONE = function(self, event, from, to)
@@ -87,11 +85,8 @@ local matchstate = sm.create({
         onaccept_incoming_challenge = function(self, event, from, to)
             CallUniService("match", "we_accept_challenge",  user_info.uid, current_challenger_uid)
         end,
-        onenter_room_confirm = function(self, event, from, to, room_ip)
-            -- TODO: 实际的进入房间逻辑，例如通知 room_actor，切换客户端场景等
-        end,
-        onroom_ready = function(self, event, from, to, room_ip)
-            
+        onenterroom_ready = function(self, event, from, to, room_ip)
+            CallActor(s.ip,"go_to_room",room_ip)
         end,
         onstatechange = function(self, event, from, to, ...)
             Log(string.format("Player %s: state %s -> %s by event %s", user_info.uid, from, to, event))
@@ -150,9 +145,6 @@ function M.on_close()
         matchstate:reject_incoming_challenge("对方离开了游戏")
     elseif current == S.CHALLENGE_ACCEPTED_WAIT_ROOM then
         -- TODO
-        
-    elseif current == S.ROOM_READY then
-        matchstate:enter_room_confirm() 
     end
 end
 

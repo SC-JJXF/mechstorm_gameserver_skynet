@@ -105,7 +105,9 @@ function M.on_open()
     local lobby_id = query_lobby_room_id("Z战队营地")
     change_room_to(lobby_id)
 end
-
+function M.CMD.go_to_room(room_id)
+    change_room_to(room_id)
+end
 function M.on_close()
     leave_current_room()
 end
