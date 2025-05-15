@@ -32,36 +32,33 @@ function M.handle_client_message(type, body)
             cs(function(map_name)
                     local lri = query_lobby_room_id(map_name)
                     if lri then
-                        change_room_to()
+                        change_room_to(lri)
                     end
             end, body.map_name)
         else
             Log("收到 'change_lobby_room' 消息但现在不在大厅中。当前房间类型: " .. (room.type or "无"))
         end
-        return
     elseif type == "leave_current_room" then
         if room.type ~= ROOM_MODEL.ROOM_TYPE.LOBBY then
             cs(function()
                     change_room_to(query_lobby_room_id(current_lobby_map_id))
             end)
-        else
-            Log("收到 'leave_current_room' 消息但现在已在大厅中。")
         end
-        return
     else
         cs(tx_to_room, type, body)
     end
 end
 
 rx_from_room = function(channel, source, msg)
-    if msg.type == "frame_sync" then
-        SendToClient("frame_sync", msg.body)
+    if msg.type == "frame_sync" or msg.type == "group_win" then
+        SendToClient(msg.type, msg.body)
     elseif msg.type == "room_destroyed" then
         Log("RoomModule: Current room " .. (room.id or "unknown") .. " destroyed, returning to lobby.")
         local lobby_id = query_lobby_room_id("Z战队营地")
         change_room_to(lobby_id)
         SendToClient("msg", { message = "当前房间已关闭，您已被送回大厅。", sender = "system" })
     end
+        
 end
 
 tx_to_room = function(type, body)
@@ -123,7 +120,7 @@ end
 
 M.CMD = {}
 function M.CMD.go_to_room(room_id)
-    Log("go_to_room"..room_id)
+    -- Log("go_to_room "..room_id)
     change_room_to(room_id)
 end
 function M.on_close()

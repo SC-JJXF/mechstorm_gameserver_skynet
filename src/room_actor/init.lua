@@ -142,7 +142,7 @@ function CMD.player_leave(uid)
     -- Log(player_count..room_type )
     if player_count == 0 and room_type ~= room_model.ROOM_TYPE.LOBBY then
         Log("房间无人，自我销毁...")
-        skynet.send(s.ip, "lua", "close") 
+        skynet.send(s.ip, "lua", "close")
     end
 end
 
@@ -150,7 +150,7 @@ end
 --- @param uid integer 玩家uid
 --- @param position table 玩家位置信息
 function CMD.player_position_update(uid, position)
-    if players[uid].HP == 0 then
+    if players[uid].HP == 0 or Room_state.game_state ~= "running" then
         return
     end
     call_module_func("on_player_position_update", uid, position)
@@ -162,7 +162,10 @@ end
 --- @param uid integer 玩家uid
 --- @param debuffname string 玩家位置信息
 function CMD.player_get_debuff(uid, debuffname)
-    if players[uid].HP == 0 and not debuffname == "die" then
+    if Room_state.game_state ~= "running" then
+        return
+    end
+    if players[uid].HP == 0 and debuffname ~= "die" then
         return
     end
     if sprite_model.debuff_type[debuffname] == nil then
@@ -177,32 +180,30 @@ end
 --- @param uid integer 玩家uid
 --- @param event table 玩家事件信息
 function CMD.player_event_add(uid, event)
-    --- TODO: 将聊天系统从房间模块拆分出去后，屏蔽hp为0的玩家发送的事件
+    --- TODO: 将聊天系统从房间模块拆分出去后，屏蔽hp为0的玩家上报的任何事件
+    --- 现在先硬编码 msg 吧。
+    if players[uid].HP == 0 and event.type ~= "msg" then
+        return
+    end
     local event_handled = call_module_func("handle_player_event", uid, event.type, event.body)
     table.insert(frame_events, { uid = uid, type = event.type, body = event.body })
-end
-
-function handle_module_message(type, body)
-    call_module_func("handle_module_message", type, body)
 end
 
 -- 内部函数：广播消息给房间内其他玩家
 local function frame_syncer()
     while true do
-        skynet.sleep(2) -- 50fps左右
-        if Room_state.game_state == "running" then
-            call_module_func("world_update")
-            if player_count > 0 and room_tx_to_players then -- Check room_tx_to_players exists
-                local frame_buffer = {
-                    in_room_players = Room_state.players,
-                    events = frame_events,
-                    timestamp = skynet.now(),
-                }
+        skynet.sleep(2)                                     -- 50fps左右
+        call_module_func("world_update")
+        if player_count > 0 and room_tx_to_players then     -- Check room_tx_to_players exists
+            local frame_buffer = {
+                in_room_players = Room_state.players,
+                events = frame_events,
+                timestamp = skynet.now(),
+            }
 
-                room_tx_to_players:publish({ type = "frame_sync", body = frame_buffer })
+            room_tx_to_players:publish({ type = "frame_sync", body = frame_buffer })
 
-                frame_events = {} -- Clear events after sending
-            end
+            frame_events = {}     -- Clear events after sending
         end
     end
 end
@@ -219,12 +220,12 @@ s.open = function(...)
         --     skynet.error("PVP模块加载失败:", err or "未知错误")
         --     error("PVP模块加载失败: " .. tostring(err or "模块未正确导出"))
         -- end
-        
+
         -- if not pvp.CMD or type(pvp.CMD) ~= "table" then
         --     skynet.error("PVP模块缺少CMD表")
         --     error("PVP模块结构不完整：缺少CMD表")
         -- end
-        
+
         -- if not pvp.CMD.pvp_init or type(pvp.CMD.pvp_init) ~= "function" then
         --     skynet.error("PVP模块缺少初始化函数")
         --     error("PVP模块缺少必要的pvp_init函数")

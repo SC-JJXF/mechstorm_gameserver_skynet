@@ -36,8 +36,8 @@ function M.on_group_win(groupId)
     if Room_state.game_state == "ended" then
         return
     end
-    Room_state.game_state = "ended"
     room_tx_to_players:publish({ type = "group_win", body = {group = groupId} })
+    Room_state.game_state = "ended"
 end
 
 ---还活着的玩家
