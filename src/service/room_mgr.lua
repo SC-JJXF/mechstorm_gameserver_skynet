@@ -39,11 +39,13 @@ function CMD.create_pvp_room(pvp_type,roomPlayers)
     return room_id
 end
 
---- 按地图名获取大厅房间
+--- 按地图id获取大厅房间
 ---@param map_id integer
----@return integer room_id
+---@return integer|nil room_id 
 function CMD.get_lobby_room(map_id)
-    assert(map_id)
+    if not ROOM_MODEL.isHallMapId(map_id) then
+       return nil 
+    end
     local room_id = lobby_mapid_roomip[map_id]
     if room_id then -- 检查房间是否存在且活跃
         -- Log("找到地图为 " .. map_id .. " 的大厅房间: " .. room_id)

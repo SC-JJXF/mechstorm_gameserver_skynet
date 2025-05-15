@@ -139,7 +139,7 @@ function CMD.player_leave(uid)
     players[uid] = nil
 
     Log("玩家离开房间，当前玩家数量：" .. player_count)
-    Log(player_count..room_type )
+    -- Log(player_count..room_type )
     if player_count == 0 and room_type ~= room_model.ROOM_TYPE.LOBBY then
         Log("房间无人，自我销毁...")
         skynet.send(s.ip, "lua", "close") 

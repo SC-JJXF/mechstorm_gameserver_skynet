@@ -12,31 +12,40 @@ local tx_to_room, leave_current_room, change_room_to, rx_from_room
 local room = {
     id = nil,
     type = nil,
-    tx_to_players_chan = nil
+    tx_to_players_chan = nil,
+    mapid = nil
 }
 
-local function query_lobby_room_id(lobby_map_name)
-    if not ROOM_MODEL.MAP_NAME.hall[lobby_map_name] then
-        return nil
+local current_lobby_map_id = ROOM_MODEL.MAP_NAME.hall["Z战队营地"]
+
+--- 若 lobby_map_name 为字符串，则认定其为 地图名 ，否则其为地图id
+local function query_lobby_room_id(lobby_map_name_or_id)
+    if type(lobby_map_name_or_id) ~= "string" then
+        return CallUniService("room_mgr","get_lobby_room", lobby_map_name_or_id)
     end
-    return CallUniService("room_mgr","get_lobby_room", ROOM_MODEL.MAP_NAME.hall[lobby_map_name])
+    return CallUniService("room_mgr","get_lobby_room", ROOM_MODEL.MAP_NAME.hall[lobby_map_name_or_id])
 end
 
 function M.handle_client_message(type, body)
     if type == "change_lobby_room" then
         if room.type == ROOM_MODEL.ROOM_TYPE.LOBBY then
             cs(function(map_name)
-                local target_lobby_id = query_lobby_room_id(map_name)
-                if target_lobby_id then
-                    change_room_to(target_lobby_id)
-                else
-                    Log("无法找到大厅房间: " .. map_name)
-                    SendToClient("msg", { message = "目标地图不存在: " .. map_name, sender = "system" })
-                end
+                    local lri = query_lobby_room_id(map_name)
+                    if lri then
+                        change_room_to()
+                    end
             end, body.map_name)
         else
             Log("收到 'change_lobby_room' 消息但现在不在大厅中。当前房间类型: " .. (room.type or "无"))
-            SendToClient("msg", { message = "请先离开当前游戏房间。", sender = "system" })
+        end
+        return
+    elseif type == "leave_current_room" then
+        if room.type ~= ROOM_MODEL.ROOM_TYPE.LOBBY then
+            cs(function()
+                    change_room_to(query_lobby_room_id(current_lobby_map_id))
+            end)
+        else
+            Log("收到 'leave_current_room' 消息但现在已在大厅中。")
         end
         return
     else
@@ -66,7 +75,7 @@ end
 leave_current_room = function()
     if room.id then
         Log("RoomModule: Leaving room " .. room.id)
-        pcall(skynet.call, room.id, "lua", "player_leave", user_info.uid)
+        CallActor(room.id,"player_leave", user_info.uid)
     end
     if room.tx_to_players_chan then
         room.tx_to_players_chan:unsubscribe()
@@ -74,6 +83,7 @@ leave_current_room = function()
     end
     room.id = nil
     room.type = nil
+    room.mapid = nil
     -- Log("RoomModule: Left room. State cleared.")
 end
 
@@ -94,6 +104,11 @@ change_room_to = function(new_room_id)
     assert(connection_info.room_info.type)
     room.type = connection_info.room_info.type
     room.tx_to_players_chan = new_channel
+    room.mapid = connection_info.room_info.mapid
+
+    if room.type == ROOM_MODEL.ROOM_TYPE.LOBBY then
+        current_lobby_map_id = room.mapid
+    end
 
     -- Log("RoomModule: Entered room " .. room.id .. " of type '" .. room.type .. "'. Room channel subscribed!")
 

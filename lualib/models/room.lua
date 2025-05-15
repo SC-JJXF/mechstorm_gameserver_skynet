@@ -30,12 +30,23 @@ ROOM.MAP_NAME = {
         ["P1V1"] = 4,
         ["P1V1V1V1"] = 5,
         ["P2V2"] = 6,
-    }   
+    }
 }
 
+--- 判断hall中是否存在指定的mapid
+---@param mapid integer 要检查的地图ID
+---@return boolean isHallMapId 如果存在返回true否则false
+function ROOM.isHallMapId(mapid)
+    for _, id in pairs(ROOM.MAP_NAME.hall) do
+        if id == mapid then
+            return true
+        end
+    end
+    return false
+end
+
 --- 根据PVP类型获取地图ID
--- @param pvpType PVP类型值(ROOM.PVP_TYPE中的值)
--- @return 地图ID, 如果找不到返回nil
+---@param pvpType integer PVP类型值(ROOM.PVP_TYPE中的值)
 function ROOM.getMapId(pvpType)
     -- 查找PVP类型名称
     local pvpName
